@@ -32,7 +32,7 @@ namespace WindowsHealth_ServerCheck.Helpers
                     string y = wmiDate.Substring(0, 4);
                     string m = wmiDate.Substring(4, 2);
                     string d = wmiDate.Substring(6, 2);
-                    return $"{y}/{m}/{d}";
+                    return $"{d}/{m}/{y}";
                 }
                 return wmiDate;
             }

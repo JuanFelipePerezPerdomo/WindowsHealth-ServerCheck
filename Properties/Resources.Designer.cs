@@ -69,5 +69,25 @@ namespace WindowsHealth_ServerCheck.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap DF_SERVER_Smart_Digital_ProcessesAzulojo {
+            get {
+                object obj = ResourceManager.GetObject("DF-SERVER-Smart-Digital-ProcessesAzulojo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap dfserver_logo {
+            get {
+                object obj = ResourceManager.GetObject("dfserver_logo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

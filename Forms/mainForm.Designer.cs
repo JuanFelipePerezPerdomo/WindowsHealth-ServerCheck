@@ -80,6 +80,10 @@
             lab_TotalDriversScan = new Label();
             btn_openDeviceManager = new Button();
             btn_temp_diagnostic = new Button();
+            chkbox_dfserver = new CheckBox();
+            pictureBox2 = new PictureBox();
+            label17 = new Label();
+            comboBox1 = new ComboBox();
             panel1.SuspendLayout();
             groupBox1.SuspendLayout();
             tableLayoutPanel2.SuspendLayout();
@@ -91,6 +95,7 @@
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             groupBox4.SuspendLayout();
             tableLayoutPanel5.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             SuspendLayout();
             // 
             // btn_TempCleaner
@@ -135,7 +140,7 @@
             btn_startEveryone.FlatStyle = FlatStyle.Flat;
             btn_startEveryone.Font = new Font("Maiandra GD", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btn_startEveryone.ForeColor = Color.White;
-            btn_startEveryone.Location = new Point(13, 407);
+            btn_startEveryone.Location = new Point(12, 449);
             btn_startEveryone.Margin = new Padding(4, 3, 4, 3);
             btn_startEveryone.Name = "btn_startEveryone";
             btn_startEveryone.Size = new Size(331, 59);
@@ -158,12 +163,12 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Font = new Font("Microsoft YaHei", 20.25F, FontStyle.Bold | FontStyle.Underline, GraphicsUnit.Point, 0);
-            label1.ForeColor = Color.Indigo;
+            label1.Font = new Font("Noto Serif Georgian", 20.25F, FontStyle.Bold | FontStyle.Underline);
+            label1.ForeColor = Color.MidnightBlue;
             label1.Location = new Point(31, 13);
             label1.Margin = new Padding(4, 0, 4, 0);
             label1.Name = "label1";
-            label1.Size = new Size(261, 36);
+            label1.Size = new Size(262, 37);
             label1.TabIndex = 5;
             label1.Text = "Protocolo Manual";
             // 
@@ -177,7 +182,7 @@
             panel1.Controls.Add(btn_TempCleaner);
             panel1.Controls.Add(btn_GenerateAudit);
             panel1.Controls.Add(btn_smartProtocol);
-            panel1.Location = new Point(13, 105);
+            panel1.Location = new Point(12, 151);
             panel1.Margin = new Padding(4, 3, 4, 3);
             panel1.Name = "panel1";
             panel1.Size = new Size(331, 292);
@@ -196,10 +201,10 @@
             // 
             // txt_healtInformation
             // 
-            txt_healtInformation.Location = new Point(102, 551);
+            txt_healtInformation.Location = new Point(102, 587);
             txt_healtInformation.Margin = new Padding(4, 3, 4, 3);
             txt_healtInformation.Name = "txt_healtInformation";
-            txt_healtInformation.Size = new Size(270, 96);
+            txt_healtInformation.Size = new Size(270, 49);
             txt_healtInformation.TabIndex = 7;
             txt_healtInformation.Text = "";
             // 
@@ -218,7 +223,7 @@
             // groupBox1
             // 
             groupBox1.Controls.Add(tableLayoutPanel2);
-            groupBox1.Location = new Point(380, 105);
+            groupBox1.Location = new Point(380, 130);
             groupBox1.Margin = new Padding(4, 3, 4, 3);
             groupBox1.Name = "groupBox1";
             groupBox1.Padding = new Padding(4, 3, 4, 3);
@@ -317,7 +322,7 @@
             groupBox2.Controls.Add(tableLayoutPanel1);
             groupBox2.Controls.Add(comB_diskName);
             groupBox2.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            groupBox2.Location = new Point(382, 271);
+            groupBox2.Location = new Point(380, 296);
             groupBox2.Margin = new Padding(4, 3, 4, 3);
             groupBox2.Name = "groupBox2";
             groupBox2.Padding = new Padding(4, 3, 4, 3);
@@ -463,18 +468,18 @@
             // 
             groupBox3.Controls.Add(btn_openWinUpdPanel);
             groupBox3.Controls.Add(tableLayoutPanel3);
-            groupBox3.Location = new Point(380, 458);
+            groupBox3.Location = new Point(380, 483);
             groupBox3.Margin = new Padding(4, 3, 4, 3);
             groupBox3.Name = "groupBox3";
             groupBox3.Padding = new Padding(4, 3, 4, 3);
-            groupBox3.Size = new Size(526, 152);
+            groupBox3.Size = new Size(526, 153);
             groupBox3.TabIndex = 11;
             groupBox3.TabStop = false;
             groupBox3.Text = "Actualizaciones";
             // 
             // btn_openWinUpdPanel
             // 
-            btn_openWinUpdPanel.Location = new Point(186, 111);
+            btn_openWinUpdPanel.Location = new Point(185, 104);
             btn_openWinUpdPanel.Margin = new Padding(4, 3, 4, 3);
             btn_openWinUpdPanel.Name = "btn_openWinUpdPanel";
             btn_openWinUpdPanel.Size = new Size(168, 27);
@@ -496,14 +501,14 @@
             tableLayoutPanel3.Controls.Add(lab_foundUpd, 0, 1);
             tableLayoutPanel3.Controls.Add(lab_succesUpd, 1, 1);
             tableLayoutPanel3.Controls.Add(lab_failedUpd, 2, 1);
-            tableLayoutPanel3.Location = new Point(92, 40);
+            tableLayoutPanel3.Location = new Point(95, 39);
             tableLayoutPanel3.Margin = new Padding(4, 3, 4, 3);
             tableLayoutPanel3.Name = "tableLayoutPanel3";
             tableLayoutPanel3.RowCount = 2;
             tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Absolute, 28F));
             tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanel3.Size = new Size(328, 53);
+            tableLayoutPanel3.Size = new Size(328, 54);
             tableLayoutPanel3.TabIndex = 0;
             // 
             // label9
@@ -585,7 +590,7 @@
             // label12
             // 
             label12.BorderStyle = BorderStyle.Fixed3D;
-            label12.Location = new Point(13, 80);
+            label12.Location = new Point(13, 74);
             label12.Margin = new Padding(4, 0, 4, 0);
             label12.Name = "label12";
             label12.Size = new Size(897, 2);
@@ -596,8 +601,8 @@
             // 
             label13.Anchor = AnchorStyles.None;
             label13.AutoSize = true;
-            label13.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold | FontStyle.Italic | FontStyle.Underline, GraphicsUnit.Point, 0);
-            label13.ForeColor = Color.FromArgb(0, 0, 192);
+            label13.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold | FontStyle.Underline, GraphicsUnit.Point, 0);
+            label13.ForeColor = Color.MidnightBlue;
             label13.Location = new Point(21, 8);
             label13.Margin = new Padding(4, 0, 4, 0);
             label13.Name = "label13";
@@ -611,7 +616,7 @@
             tableLayoutPanel4.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             tableLayoutPanel4.Controls.Add(label13, 0, 0);
             tableLayoutPanel4.Controls.Add(btn_HealtHistory, 0, 1);
-            tableLayoutPanel4.Location = new Point(46, 483);
+            tableLayoutPanel4.Location = new Point(46, 514);
             tableLayoutPanel4.Margin = new Padding(4, 3, 4, 3);
             tableLayoutPanel4.Name = "tableLayoutPanel4";
             tableLayoutPanel4.RowCount = 2;
@@ -623,22 +628,22 @@
             // label14
             // 
             label14.AutoSize = true;
-            label14.Font = new Font("Lucida Sans Typewriter", 24F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label14.ForeColor = Color.FromArgb(0, 0, 192);
-            label14.Location = new Point(12, 25);
+            label14.Font = new Font("Noto Serif Georgian", 26.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label14.ForeColor = Color.MidnightBlue;
+            label14.Location = new Point(12, 9);
             label14.Margin = new Padding(4, 0, 4, 0);
             label14.Name = "label14";
-            label14.Size = new Size(663, 37);
+            label14.Size = new Size(640, 48);
             label14.TabIndex = 15;
             label14.Text = "Health Server Check - Copicanarias";
             // 
             // pictureBox1
             // 
             pictureBox1.Image = Properties.Resources.copican_logo;
-            pictureBox1.Location = new Point(816, 14);
+            pictureBox1.Location = new Point(693, 2);
             pictureBox1.Margin = new Padding(4, 3, 4, 3);
             pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(72, 62);
+            pictureBox1.Size = new Size(72, 69);
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox1.TabIndex = 16;
             pictureBox1.TabStop = false;
@@ -647,7 +652,7 @@
             // 
             groupBox4.Controls.Add(tableLayoutPanel5);
             groupBox4.Controls.Add(btn_openDeviceManager);
-            groupBox4.Location = new Point(645, 105);
+            groupBox4.Location = new Point(645, 130);
             groupBox4.Margin = new Padding(4, 3, 4, 3);
             groupBox4.Name = "groupBox4";
             groupBox4.Padding = new Padding(4, 3, 4, 3);
@@ -742,12 +747,58 @@
             btn_temp_diagnostic.UseVisualStyleBackColor = true;
             btn_temp_diagnostic.Click += btn_temp_diagnostic_Click;
             // 
+            // chkbox_dfserver
+            // 
+            chkbox_dfserver.AutoSize = true;
+            chkbox_dfserver.Font = new Font("Noto Serif Georgian", 11.9999981F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            chkbox_dfserver.Location = new Point(91, 98);
+            chkbox_dfserver.Name = "chkbox_dfserver";
+            chkbox_dfserver.Size = new Size(233, 26);
+            chkbox_dfserver.TabIndex = 19;
+            chkbox_dfserver.Text = "Soy Tecnico de DF-SERVER";
+            chkbox_dfserver.UseVisualStyleBackColor = true;
+            chkbox_dfserver.CheckedChanged += chkbox_dfserver_CheckedChanged;
+            // 
+            // pictureBox2
+            // 
+            pictureBox2.BackgroundImageLayout = ImageLayout.None;
+            pictureBox2.Image = Properties.Resources.dfserver_logo;
+            pictureBox2.Location = new Point(19, 79);
+            pictureBox2.Name = "pictureBox2";
+            pictureBox2.Size = new Size(66, 66);
+            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
+            pictureBox2.TabIndex = 20;
+            pictureBox2.TabStop = false;
+            // 
+            // label17
+            // 
+            label17.AutoSize = true;
+            label17.Font = new Font("Noto Serif Georgian", 11.9999981F);
+            label17.Location = new Point(388, 98);
+            label17.Name = "label17";
+            label17.Size = new Size(73, 22);
+            label17.TabIndex = 21;
+            label17.Text = "Tecnico:";
+            // 
+            // comboBox1
+            // 
+            comboBox1.FormattingEnabled = true;
+            comboBox1.Items.AddRange(new object[] { "Francisco Muñoz", "Himar", "Mencey", "Aaron", "Fabio" });
+            comboBox1.Location = new Point(464, 97);
+            comboBox1.Name = "comboBox1";
+            comboBox1.Size = new Size(320, 23);
+            comboBox1.TabIndex = 22;
+            // 
             // mainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackgroundImageLayout = ImageLayout.None;
-            ClientSize = new Size(920, 645);
+            ClientSize = new Size(924, 648);
+            Controls.Add(comboBox1);
+            Controls.Add(label17);
+            Controls.Add(pictureBox2);
+            Controls.Add(chkbox_dfserver);
             Controls.Add(btn_temp_diagnostic);
             Controls.Add(groupBox4);
             Controls.Add(pictureBox1);
@@ -781,6 +832,7 @@
             groupBox4.ResumeLayout(false);
             tableLayoutPanel5.ResumeLayout(false);
             tableLayoutPanel5.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
             ResumeLayout(false);
             PerformLayout();
 
@@ -840,5 +892,9 @@
         private Label label16;
         private Label lab_TotalDriversScan;
         private Button btn_temp_diagnostic;
+        private CheckBox chkbox_dfserver;
+        private PictureBox pictureBox2;
+        private Label label17;
+        private ComboBox comboBox1;
     }
 }

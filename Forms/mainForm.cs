@@ -206,23 +206,6 @@ namespace WindowsHealth_ServerCheck.Forms
             }
         }
 
-        private void btn_HealtHistory_Click(object sender, EventArgs e)
-        {
-            if (File.Exists(HistoryLogger.HistoryPath))
-            {
-                Process.Start("notepad.exe", HistoryLogger.HistoryPath);
-            }
-            else
-            {
-                MessageBox.Show(
-                    "Aún no existe un histórico guardado.",
-                    "Sin histórico",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information
-                );
-            }
-        }
-
         private void btn_GenerateAudit_Click(object sender, EventArgs e)
         {
             _auditResult.Date = DateTime.Now;
@@ -233,6 +216,11 @@ namespace WindowsHealth_ServerCheck.Forms
                 MessageBox.Show("No se ha ejecutado ningún módulo todavía.",
                     "Sin datos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
+            }
+
+            if (chkbox_dfserver.Checked)
+            {
+                if (!ShowDfServerForm()) return;
             }
             ReportBuilder.Generate(_auditResult);
         }
@@ -245,6 +233,11 @@ namespace WindowsHealth_ServerCheck.Forms
                 MessageBoxIcon.Question);
             if (result == DialogResult.Yes)
             {
+                if (chkbox_dfserver.Checked)
+                {
+                    if (!ShowDfServerForm()) return;
+                }
+
                 btn_viewAllDisk.Enabled = true;
                 btn_startEveryone.Enabled = false;
                 btn_startDriverComp.Enabled = false;
@@ -318,6 +311,50 @@ namespace WindowsHealth_ServerCheck.Forms
                 btn_startDriverComp.Enabled = true;
             }
         }
+        private void btn_HealtHistory_Click(object sender, EventArgs e)
+        {
+            if (File.Exists(HistoryLogger.HistoryPath))
+            {
+                Process.Start("notepad.exe", HistoryLogger.HistoryPath);
+            }
+            else
+            {
+                MessageBox.Show(
+                    "Aún no existe un histórico guardado.",
+                    "Sin histórico",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+            }
+        }
+
+        // ── DfServer: abre el formulario, asigna los datos y devuelve si se completó ──
+        // Devuelve true si el usuario completó y confirmó el formulario.
+        // Devuelve false si canceló o cerró sin completarlo, y muestra aviso.
+        private bool ShowDfServerForm()
+        {
+            using dfServerForm form = new dfServerForm();
+            DialogResult dr = form.ShowDialog();
+
+            if (dr == DialogResult.OK && form.DfData != null)
+            {
+                _auditResult.DfServer = form.DfData;
+                _auditResult.DfServerExecuted = true;
+                return true;
+            }
+
+            // El usuario canceló o cerró sin completar
+            MessageBox.Show(
+                "El informe no se ha generado porque el formulario de DfServer no fue completado.\n\n" +
+                "Puedes desmarcar la opción 'DfServer' si no necesitas incluir esta sección.",
+                "Informe no generado",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+
+            return false;
+        }
+
+        private void chkbox_dfserver_CheckedChanged(object sender, EventArgs e) { }
 
         private void btn_openWinUpdPanel_Click(object sender, EventArgs e)
         {
@@ -357,7 +394,7 @@ namespace WindowsHealth_ServerCheck.Forms
             }
         }
 
-        // ── Selección de disco ────────────────────────────────────────────────────
+        // Selección de disco
         private void comB_diskName_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (_auditResult?.Disks == null || comB_diskName.SelectedIndex < 0) return;
@@ -374,12 +411,12 @@ namespace WindowsHealth_ServerCheck.Forms
                 return;
             }
 
-            // ── Temperatura ───────────────────────────────────────────────────────
+            // Temperatura 
             lab_temperature.Text = $"{disk.Temperature}°C";
             lab_temperature.ForeColor = disk.Temperature < 45 ? Color.Green
                 : disk.Temperature <= 55 ? Color.Goldenrod : Color.Red;
 
-            // ── Vida útil (solo SSDs con atributo de salud) ───────────────────────
+            // Vida útil (solo SSDs con atributo de salud) 
             if (disk.HasHealthData)
             {
                 lab_diskHealth.Text = $"{disk.HealthPercent}%";
@@ -391,7 +428,7 @@ namespace WindowsHealth_ServerCheck.Forms
                 SetLabel(lab_diskHealth, "N/D", Color.Gray);
             }
 
-            // ── Horas de uso ──────────────────────────────────────────────────────
+            // Horas de uso 
             if (disk.HoursUsed > 0)
             {
                 lab_hours.Text = $"{disk.HoursUsed} h";
@@ -403,7 +440,7 @@ namespace WindowsHealth_ServerCheck.Forms
                 SetLabel(lab_hours, "N/D", Color.Gray);
             }
 
-            // ── Falla inminente ───────────────────────────────────────────────────
+            // Falla inminente
             // PredictFailureResolved = true  → tenemos una respuesta definitiva (Sí / No)
             // PredictFailureResolved = false → no hubo fuente disponible para determinarlo (N/D)
             // HasSmartData = false           → ya manejado arriba con N/A

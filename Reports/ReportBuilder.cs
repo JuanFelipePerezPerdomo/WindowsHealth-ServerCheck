@@ -46,6 +46,9 @@ namespace WindowsHealth_ServerCheck.Reports
 
                             if (audit.DriversExecuted && audit.Drivers != null)
                                 ComposeDriversSection(col, audit.Drivers);
+
+                            if (audit.DfServerExecuted && audit.DfServer != null)
+                                ComposeDfServerSection(col, audit.DfServer);
                         });
 
                         page.Footer().AlignCenter().Text(text =>
@@ -218,6 +221,103 @@ namespace WindowsHealth_ServerCheck.Reports
                             .Text(text => text.Span(d.DeviceName).FontColor("#E74C3C").Bold());
                         table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5).Text(d.DriverVersion);
                         table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5).Text(d.DriverDate);
+                    }
+                });
+            }
+        }
+
+        private static void ComposeDfServerSection(ColumnDescriptor col, DfServerData df)
+        {
+            col.Item().Element(SectionTitle("Datos DfServer"));
+
+            // Digitalización Certificada
+            col.Item().PaddingTop(6).Text("Digitalización certificada").Bold();
+            col.Item().Table(table =>
+            {
+                table.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); });
+                table.Header(h => { h.Cell().Element(HeaderCell).Text("Concepto"); h.Cell().Element(HeaderCell).Text("Estado"); });
+                AddRow(table, "Tiene digitalización certificada", df.HasCertifiedDigitization ? "Sí" : "No");
+                if (df.HasCertifiedDigitization)
+                    AddRow(table, "Configurada correctamente",
+                        df.HasConfigureDigitization ? "Sí" : "No",
+                        df.HasConfigureDigitization ? "#27AE60" : "#E74C3C");
+            });
+
+            // DfSignature
+            col.Item().PaddingTop(10).Text("DfSignature").Bold();
+            col.Item().Table(table =>
+            {
+                table.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); });
+                table.Header(h => { h.Cell().Element(HeaderCell).Text("Concepto"); h.Cell().Element(HeaderCell).Text("Estado"); });
+                AddRow(table, "Tiene firmas DfSignature", df.HasDfSignature ? "Sí" : "No");
+                if (df.HasDfSignature)
+                {
+                    AddRow(table, "Número de firmas", df.DfSignatureCount.ToString());
+                    if (df.DfSignatureCount <= 100)
+                        AddRow(table, "Cliente notificado",
+                            df.ClientNotificateSignature ? "Sí" : "No",
+                            df.ClientNotificateSignature ? "#27AE60" : "#E74C3C");
+                }
+            });
+
+            // Certificados digitales
+            col.Item().PaddingTop(10).Text("Certificados digitales").Bold();
+            col.Item().Table(table =>
+            {
+                table.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); });
+                table.Header(h => { h.Cell().Element(HeaderCell).Text("Concepto"); h.Cell().Element(HeaderCell).Text("Estado"); });
+                AddRow(table, "Tiene certificados digitales", df.HasCertificates ? "Sí" : "No");
+                if (df.HasCertificates)
+                    AddRow(table, "Número de certificados", df.Certificate.Count.ToString());
+            });
+
+            if (df.HasCertificates && df.Certificate.Count > 0)
+            {
+                col.Item().PaddingTop(8).Table(table =>
+                {
+                    table.ColumnsDefinition(c =>
+                    {
+                        c.RelativeColumn(3);
+                        c.RelativeColumn(2);
+                        c.RelativeColumn(2);
+                        c.RelativeColumn(2);
+                    });
+                    table.Header(h =>
+                    {
+                        h.Cell().Element(HeaderCell).Text("Certificado");
+                        h.Cell().Element(HeaderCell).Text("Caducidad");
+                        h.Cell().Element(HeaderCell).Text("Estado");
+                        h.Cell().Element(HeaderCell).Text("Cliente avisado");
+                    });
+
+                    foreach (CertificateInfo cert in df.Certificate)
+                    {
+                        string estadoColor = cert.Status switch
+                        {
+                            CertificateStatus.Expired => "#E74C3C",
+                            CertificateStatus.ExpiringSoon => "#E67E22",
+                            _ => "#27AE60",
+                        };
+                        string estadoText = cert.Status switch
+                        {
+                            CertificateStatus.Expired => "Caducado",
+                            CertificateStatus.ExpiringSoon => "Caduca pronto",
+                            _ => "Vigente",
+                        };
+
+                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5).Text(cert.Name);
+                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                            .Text(cert.ExpirationDate.ToString("dd/MM/yyyy"));
+                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                            .Text(t => t.Span(estadoText).FontColor(estadoColor).Bold());
+
+                        // "Cliente avisado" solo aplica a caducados/próximos
+                        if (cert.Status != CertificateStatus.Valid)
+                            table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                                .Text(t => t.Span(cert.ClientNotificade ? "Sí" : "No")
+                                    .FontColor(cert.ClientNotificade ? "#27AE60" : "#E74C3C").Bold());
+                        else
+                            table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5).Text("—");
                     }
                 });
             }
