@@ -7,6 +7,30 @@ namespace WindowsHealth_ServerCheck.Modules
 {
     public class DriverScanner
     {
+        // Fecha de referencia para drivers genéricos de Microsoft,
+        // aunque el driver este actualizado su fecha siempre sera estatica por lo que puede dar problemas
+        // a la hora de comparar, por lo que se usara como referencia para no marcar drivers
+        // genéricos como desactualizados
+        private static readonly string GenericWindowsDriverDate = "21/06/2006";
+
+        // Lista de fabricantes genéricos que suelen tener drivers con fechas antiguas
+        // pero que no necesariamente indican que el driver este desactualizado
+        private static readonly HashSet<string> GenericManufacturers = new HashSet<string>(
+            StringComparer.OrdinalIgnoreCase)
+        {
+            "Microsoft",
+            "(Standard system devices)",
+            "(Standard display types)",
+            "(Standard port types)",
+            "(Standard USB Host Controller)",
+            "(Standard keyboards)",
+            "(Standard mice)",
+            "(Standard floppy disk controllers)",
+            "(Standard CD-ROM drives)",
+            "(Standard AHCI 1.0 Serial ATA Controller)",
+            "(Standard IDE ATA/ATAPI controllers)",
+        };
+
         public static (List<string> log, DriversResult result) Scan() 
         {
             List<string> log = new List<string>();
@@ -68,6 +92,14 @@ namespace WindowsHealth_ServerCheck.Modules
                         UpdatedTitle = string.Empty
                     };
 
+                    if(IsGenericDriver(manufacturer, driverDateReadable))
+                    {
+                        log.Add($"[GENÉRICO] {deviceName} — v{driverVersion} ({driverDateReadable})");
+                        result.Drivers.Add(info);
+                        result.TotalDrivers++;
+                        continue; // no marcara como desactualizado aunque tenga una fecha antigua al ser un driver genérico de Microsoft
+                    }
+
                     /* Para cruzar esta informacion con las actualizacion pendientes lo que haremos
                      sera que buscaremos una palabra clave del nombre del dispositivo que aparece como
                      clave del map de actualizaciones pendientes
@@ -113,6 +145,23 @@ namespace WindowsHealth_ServerCheck.Modules
                     return title;
             }
             return null;
+        }
+
+        // Método para determinar si un driver es genérico basado en el fabricante y la fecha del driver
+        private static bool IsGenericDriver(string manufacturer, string driverDateReadable)
+        {
+            if (driverDateReadable != GenericWindowsDriverDate)
+                return false;
+
+            // coincidencia exacta con fabricantes genéricos conocidos
+            if (GenericManufacturers.Contains(manufacturer))
+                return true;
+
+            // También se puede hacer una comprobación más flexible para fabricantes genéricos
+            if (manufacturer.StartsWith("(Standard", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            return false;
         }
     }
 }
