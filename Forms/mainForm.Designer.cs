@@ -35,6 +35,7 @@
             btn_GenerateAudit = new Button();
             label1 = new Label();
             panel1 = new Panel();
+            chkBox_EnableSystemUpdate = new CheckBox();
             btn_startDriverComp = new Button();
             txt_healtInformation = new RichTextBox();
             btn_HealtHistory = new Button();
@@ -100,47 +101,63 @@
             // 
             // btn_TempCleaner
             // 
-            btn_TempCleaner.Location = new Point(43, 58);
+            btn_TempCleaner.BackColor = Color.DodgerBlue;
+            btn_TempCleaner.Cursor = Cursors.Hand;
+            btn_TempCleaner.FlatStyle = FlatStyle.Flat;
+            btn_TempCleaner.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btn_TempCleaner.ForeColor = Color.Transparent;
+            btn_TempCleaner.Location = new Point(45, 40);
             btn_TempCleaner.Margin = new Padding(4, 3, 4, 3);
             btn_TempCleaner.Name = "btn_TempCleaner";
             btn_TempCleaner.Size = new Size(231, 35);
             btn_TempCleaner.TabIndex = 0;
             btn_TempCleaner.Text = "Eliminar Archivos Temporales";
-            btn_TempCleaner.UseVisualStyleBackColor = true;
+            btn_TempCleaner.UseVisualStyleBackColor = false;
             btn_TempCleaner.Click += btn_TempCleaner_Click;
             // 
             // btn_smartProtocol
             // 
-            btn_smartProtocol.Location = new Point(43, 99);
+            btn_smartProtocol.BackColor = Color.DodgerBlue;
+            btn_smartProtocol.Cursor = Cursors.Hand;
+            btn_smartProtocol.FlatStyle = FlatStyle.Flat;
+            btn_smartProtocol.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btn_smartProtocol.ForeColor = Color.Transparent;
+            btn_smartProtocol.Location = new Point(45, 91);
             btn_smartProtocol.Margin = new Padding(4, 3, 4, 3);
             btn_smartProtocol.Name = "btn_smartProtocol";
             btn_smartProtocol.Size = new Size(231, 35);
             btn_smartProtocol.TabIndex = 1;
             btn_smartProtocol.Text = "Iniciar Protocolo S.M.A.R.T";
-            btn_smartProtocol.UseVisualStyleBackColor = true;
+            btn_smartProtocol.UseVisualStyleBackColor = false;
             btn_smartProtocol.Click += btn_smartProtocol_Click;
             // 
             // btn_winUpdate
             // 
-            btn_winUpdate.Location = new Point(43, 144);
+            btn_winUpdate.BackColor = Color.DodgerBlue;
+            btn_winUpdate.Cursor = Cursors.Hand;
+            btn_winUpdate.FlatStyle = FlatStyle.Flat;
+            btn_winUpdate.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btn_winUpdate.ForeColor = Color.Transparent;
+            btn_winUpdate.Location = new Point(45, 143);
             btn_winUpdate.Margin = new Padding(4, 3, 4, 3);
             btn_winUpdate.Name = "btn_winUpdate";
             btn_winUpdate.Size = new Size(231, 35);
             btn_winUpdate.TabIndex = 2;
-            btn_winUpdate.Text = "Iniciar Actualizador de sistema";
-            btn_winUpdate.UseVisualStyleBackColor = true;
+            btn_winUpdate.Text = "Iniciar Scan de Actualizaciones";
+            btn_winUpdate.UseVisualStyleBackColor = false;
             btn_winUpdate.Click += btn_winUpdate_Click;
             // 
             // btn_startEveryone
             // 
             btn_startEveryone.BackColor = Color.FromArgb(202, 11, 11);
             btn_startEveryone.BackgroundImageLayout = ImageLayout.None;
+            btn_startEveryone.Cursor = Cursors.Hand;
             btn_startEveryone.FlatAppearance.BorderColor = Color.FromArgb(244, 15, 2);
             btn_startEveryone.FlatAppearance.BorderSize = 0;
             btn_startEveryone.FlatStyle = FlatStyle.Flat;
             btn_startEveryone.Font = new Font("Maiandra GD", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btn_startEveryone.ForeColor = Color.White;
-            btn_startEveryone.Location = new Point(12, 449);
+            btn_startEveryone.Location = new Point(12, 483);
             btn_startEveryone.Margin = new Padding(4, 3, 4, 3);
             btn_startEveryone.Name = "btn_startEveryone";
             btn_startEveryone.Size = new Size(331, 59);
@@ -151,13 +168,18 @@
             // 
             // btn_GenerateAudit
             // 
-            btn_GenerateAudit.Location = new Point(5, 243);
+            btn_GenerateAudit.BackColor = Color.MidnightBlue;
+            btn_GenerateAudit.Cursor = Cursors.Hand;
+            btn_GenerateAudit.FlatStyle = FlatStyle.Flat;
+            btn_GenerateAudit.Font = new Font("Maiandra GD", 9F, FontStyle.Bold);
+            btn_GenerateAudit.ForeColor = SystemColors.Control;
+            btn_GenerateAudit.Location = new Point(4, 262);
             btn_GenerateAudit.Margin = new Padding(4, 3, 4, 3);
             btn_GenerateAudit.Name = "btn_GenerateAudit";
-            btn_GenerateAudit.Size = new Size(318, 42);
+            btn_GenerateAudit.Size = new Size(318, 53);
             btn_GenerateAudit.TabIndex = 4;
             btn_GenerateAudit.Text = "Generar Informe";
-            btn_GenerateAudit.UseVisualStyleBackColor = true;
+            btn_GenerateAudit.UseVisualStyleBackColor = false;
             btn_GenerateAudit.Click += btn_GenerateAudit_Click;
             // 
             // label1
@@ -165,7 +187,7 @@
             label1.AutoSize = true;
             label1.Font = new Font("Noto Serif Georgian", 20.25F, FontStyle.Bold | FontStyle.Underline);
             label1.ForeColor = Color.MidnightBlue;
-            label1.Location = new Point(31, 13);
+            label1.Location = new Point(29, 0);
             label1.Margin = new Padding(4, 0, 4, 0);
             label1.Name = "label1";
             label1.Size = new Size(262, 37);
@@ -174,8 +196,9 @@
             // 
             // panel1
             // 
-            panel1.BackColor = SystemColors.Control;
+            panel1.BackColor = Color.MintCream;
             panel1.BorderStyle = BorderStyle.Fixed3D;
+            panel1.Controls.Add(chkBox_EnableSystemUpdate);
             panel1.Controls.Add(btn_startDriverComp);
             panel1.Controls.Add(btn_winUpdate);
             panel1.Controls.Add(label1);
@@ -185,39 +208,60 @@
             panel1.Location = new Point(12, 151);
             panel1.Margin = new Padding(4, 3, 4, 3);
             panel1.Name = "panel1";
-            panel1.Size = new Size(331, 292);
+            panel1.Size = new Size(331, 326);
             panel1.TabIndex = 6;
+            // 
+            // chkBox_EnableSystemUpdate
+            // 
+            chkBox_EnableSystemUpdate.AutoSize = true;
+            chkBox_EnableSystemUpdate.Cursor = Cursors.Hand;
+            chkBox_EnableSystemUpdate.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            chkBox_EnableSystemUpdate.Location = new Point(45, 177);
+            chkBox_EnableSystemUpdate.Name = "chkBox_EnableSystemUpdate";
+            chkBox_EnableSystemUpdate.Size = new Size(223, 19);
+            chkBox_EnableSystemUpdate.TabIndex = 7;
+            chkBox_EnableSystemUpdate.Text = "Actualizar Sistema Automaticamente";
+            chkBox_EnableSystemUpdate.UseVisualStyleBackColor = true;
+            chkBox_EnableSystemUpdate.CheckedChanged += chkBox_EnableSystemUpdate_CheckedChanged;
             // 
             // btn_startDriverComp
             // 
-            btn_startDriverComp.Location = new Point(43, 193);
+            btn_startDriverComp.BackColor = Color.DodgerBlue;
+            btn_startDriverComp.Cursor = Cursors.Hand;
+            btn_startDriverComp.FlatStyle = FlatStyle.Flat;
+            btn_startDriverComp.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btn_startDriverComp.ForeColor = Color.Transparent;
+            btn_startDriverComp.Location = new Point(45, 210);
             btn_startDriverComp.Margin = new Padding(4, 3, 4, 3);
             btn_startDriverComp.Name = "btn_startDriverComp";
             btn_startDriverComp.Size = new Size(231, 35);
             btn_startDriverComp.TabIndex = 6;
             btn_startDriverComp.Text = "Iniciar comprobador de drivers";
-            btn_startDriverComp.UseVisualStyleBackColor = true;
+            btn_startDriverComp.UseVisualStyleBackColor = false;
             btn_startDriverComp.Click += btn_startDriverComp_Click;
             // 
             // txt_healtInformation
             // 
-            txt_healtInformation.Location = new Point(102, 587);
+            txt_healtInformation.Location = new Point(91, 604);
             txt_healtInformation.Margin = new Padding(4, 3, 4, 3);
             txt_healtInformation.Name = "txt_healtInformation";
-            txt_healtInformation.Size = new Size(270, 49);
+            txt_healtInformation.Size = new Size(252, 32);
             txt_healtInformation.TabIndex = 7;
             txt_healtInformation.Text = "";
             // 
             // btn_HealtHistory
             // 
             btn_HealtHistory.Anchor = AnchorStyles.None;
-            btn_HealtHistory.Location = new Point(46, 34);
+            btn_HealtHistory.BackColor = SystemColors.Control;
+            btn_HealtHistory.Cursor = Cursors.Hand;
+            btn_HealtHistory.FlatStyle = FlatStyle.System;
+            btn_HealtHistory.Location = new Point(250, 8);
             btn_HealtHistory.Margin = new Padding(4, 3, 4, 3);
             btn_HealtHistory.Name = "btn_HealtHistory";
-            btn_HealtHistory.Size = new Size(152, 24);
+            btn_HealtHistory.Size = new Size(81, 24);
             btn_HealtHistory.TabIndex = 8;
-            btn_HealtHistory.Text = "Ver el historico completo";
-            btn_HealtHistory.UseVisualStyleBackColor = true;
+            btn_HealtHistory.Text = "Ver Historico";
+            btn_HealtHistory.UseVisualStyleBackColor = false;
             btn_HealtHistory.Click += btn_HealtHistory_Click;
             // 
             // groupBox1
@@ -479,6 +523,7 @@
             // 
             // btn_openWinUpdPanel
             // 
+            btn_openWinUpdPanel.Cursor = Cursors.Hand;
             btn_openWinUpdPanel.Location = new Point(185, 104);
             btn_openWinUpdPanel.Margin = new Padding(4, 3, 4, 3);
             btn_openWinUpdPanel.Name = "btn_openWinUpdPanel";
@@ -515,7 +560,7 @@
             // 
             label9.Anchor = AnchorStyles.None;
             label9.AutoSize = true;
-            label9.BackColor = SystemColors.Control;
+            label9.BackColor = Color.Transparent;
             label9.Location = new Point(11, 6);
             label9.Margin = new Padding(4, 0, 4, 0);
             label9.Name = "label9";
@@ -601,28 +646,28 @@
             // 
             label13.Anchor = AnchorStyles.None;
             label13.AutoSize = true;
-            label13.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold | FontStyle.Underline, GraphicsUnit.Point, 0);
+            label13.Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label13.ForeColor = Color.MidnightBlue;
-            label13.Location = new Point(21, 8);
+            label13.Location = new Point(4, 13);
             label13.Margin = new Padding(4, 0, 4, 0);
             label13.Name = "label13";
-            label13.Size = new Size(202, 15);
+            label13.Size = new Size(238, 15);
             label13.TabIndex = 13;
-            label13.Text = "Consultar Registros Anteriores";
+            label13.Text = "¿Necesitas los registros anteriores?";
             // 
             // tableLayoutPanel4
             // 
-            tableLayoutPanel4.ColumnCount = 1;
+            tableLayoutPanel4.ColumnCount = 2;
+            tableLayoutPanel4.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 246F));
             tableLayoutPanel4.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             tableLayoutPanel4.Controls.Add(label13, 0, 0);
-            tableLayoutPanel4.Controls.Add(btn_HealtHistory, 0, 1);
-            tableLayoutPanel4.Location = new Point(46, 514);
+            tableLayoutPanel4.Controls.Add(btn_HealtHistory, 1, 0);
+            tableLayoutPanel4.Location = new Point(12, 556);
             tableLayoutPanel4.Margin = new Padding(4, 3, 4, 3);
             tableLayoutPanel4.Name = "tableLayoutPanel4";
-            tableLayoutPanel4.RowCount = 2;
+            tableLayoutPanel4.RowCount = 1;
             tableLayoutPanel4.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanel4.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanel4.Size = new Size(244, 62);
+            tableLayoutPanel4.Size = new Size(335, 41);
             tableLayoutPanel4.TabIndex = 14;
             // 
             // label14
@@ -728,6 +773,7 @@
             // 
             // btn_openDeviceManager
             // 
+            btn_openDeviceManager.Cursor = Cursors.Hand;
             btn_openDeviceManager.Location = new Point(16, 108);
             btn_openDeviceManager.Margin = new Padding(4, 3, 4, 3);
             btn_openDeviceManager.Name = "btn_openDeviceManager";
@@ -739,9 +785,9 @@
             // 
             // btn_temp_diagnostic
             // 
-            btn_temp_diagnostic.Location = new Point(20, 587);
+            btn_temp_diagnostic.Location = new Point(12, 615);
             btn_temp_diagnostic.Name = "btn_temp_diagnostic";
-            btn_temp_diagnostic.Size = new Size(75, 23);
+            btn_temp_diagnostic.Size = new Size(52, 21);
             btn_temp_diagnostic.TabIndex = 18;
             btn_temp_diagnostic.Text = "button1";
             btn_temp_diagnostic.UseVisualStyleBackColor = true;
@@ -750,6 +796,7 @@
             // chkbox_dfserver
             // 
             chkbox_dfserver.AutoSize = true;
+            chkbox_dfserver.Cursor = Cursors.Hand;
             chkbox_dfserver.Font = new Font("Noto Serif Georgian", 11.9999981F, FontStyle.Regular, GraphicsUnit.Point, 0);
             chkbox_dfserver.Location = new Point(91, 98);
             chkbox_dfserver.Name = "chkbox_dfserver";
@@ -793,6 +840,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
+            BackColor = Color.MintCream;
             BackgroundImageLayout = ImageLayout.None;
             ClientSize = new Size(924, 648);
             Controls.Add(comboBox1);
@@ -896,5 +944,6 @@
         private PictureBox pictureBox2;
         private Label label17;
         private ComboBox comboBox1;
+        private CheckBox chkBox_EnableSystemUpdate;
     }
 }

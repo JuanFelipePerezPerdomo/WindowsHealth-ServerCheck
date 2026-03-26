@@ -63,7 +63,7 @@ namespace WindowsHealth_ServerCheck.Modules
                         HasHealthData = false,
                     };
 
-                    // ── Temperatura ───────────────────────────────────────────────
+                    // Temperatura
                     // Primer sensor Temperature con valor disponible
                     ISensor tempSensor = disk.Sensors
                         .Where(s => s.SensorType == SensorType.Temperature && s.Value.HasValue)
@@ -77,7 +77,7 @@ namespace WindowsHealth_ServerCheck.Modules
                         log.Add($"  > Temperatura ({tempSensor.Name}): {result.Temperature}°C");
                     }
 
-                    // ── Vida útil / salud ─────────────────────────────────────────
+                    // Vida útil / salud
                     // LHM expone siempre SensorType.Level para vida útil en SSDs.
                     // Nombres conocidos por fabricante:
                     //   "Life"             → Micron, Crucial
@@ -116,7 +116,7 @@ namespace WindowsHealth_ServerCheck.Modules
                             log.Add("  [WARNING] El disco esta llegando al final de su vida util");
                     }
 
-                    // ── Horas de uso ──────────────────────────────────────────────
+                    // Horas de uso
                     // LHM expone las horas como SensorType.Factor (no Data), Name="Power On Hours".
                     // Buscamos en Factor primero; como fallback también miramos Data por si
                     // algún fabricante lo expone ahí, pero filtrando siempre por nombre
@@ -138,7 +138,7 @@ namespace WindowsHealth_ServerCheck.Modules
                         log.Add($"  > Horas de uso ({hourSensor.Name}): {result.HoursUsed} h");
                     }
 
-                    // ── PredictFailure ────────────────────────────────────────────
+                    // PredictFailure
                     // NVMe: WMI no lo soporta → inferimos de vida útil si disponible.
                     // SATA/ATA: intentamos WMI (fuente más fiable); si falla, inferimos.
                     // En ambos casos si tenemos HasHealthData siempre podemos dar un valor.
@@ -229,24 +229,90 @@ namespace WindowsHealth_ServerCheck.Modules
             }
             return false;
         }
-
         private static string DetectInterface(string diskName, IHardware disk)
         {
             string upper = diskName.ToUpperInvariant();
 
+            // 1. Identificador interno de LHM
+            // LHM construye el Identifier según el tipo de bus que detectó:
+            //   NVMe  →  /nvme/0, /nvme/1, …
+            //   SATA  →  /hdd/0,  /hdd/1,  …
+            // Esta es la fuente más fiable porque proviene del propio LHM,
+            // independientemente de cómo el fabricante haya puesto el nombre.
+            string identifier = disk.Identifier.ToString().ToLowerInvariant();
+
+            if (identifier.Contains("/nvme"))
+                return "NVMe";
+
+            // 2. Nombre del dispositivo
+            // Fallback cuando el Identifier no es concluyente (discos USB que
+            // LHM enumera con /hdd/ si logra acceder vía SAT-passthrough).
             if (upper.Contains("NVME") || upper.Contains("NVM EXPRESS"))
                 return "NVMe";
 
-            // LHM suele incluir "USB" en el nombre de discos externos conectados por USB
             if (upper.Contains("USB"))
                 return "USB / Externo";
 
-            // Si ningún sensor tiene valor, tampoco hay comunicación SMART directa
+            // 3. WMI MSFT_PhysicalDisk.BusType
+            // Fuente autoritativa del SO. BusType conocidos:
+            //   3 = SATA,  7 = USB,  8 = RAID,  11 = NVMe,  17 = SCM, etc.
+            // Cruzamos por modelo (primeras palabras del nombre) porque
+            // MSFT_PhysicalDisk no expone un ID compartido con LHM.
+            string wmiBusResult = TryGetBusTypeFromWmi(diskName);
+            if (wmiBusResult != null)
+                return wmiBusResult;
+
+            // 4. Ausencia de sensores
+            // Si LHM no pudo leer ningún sensor es señal de que el acceso SMART
+            // está bloqueado, lo que ocurre típicamente en discos USB sin
+            // SAT-passthrough.
             bool hasAnyValue = disk.Sensors.Any(s => s.Value.HasValue);
             if (!hasAnyValue)
                 return "USB / Externo";
 
             return "SATA / ATA";
+        }
+
+        // Consulta MSFT_PhysicalDisk para obtener el BusType del disco.
+        // Devuelve la cadena de interfaz o null si no se puede determinar.
+        private static string TryGetBusTypeFromWmi(string diskName)
+        {
+            try
+            {
+                var collection = WmiHelper.Query(
+                    @"root\Microsoft\Windows\Storage",
+                    "SELECT FriendlyName, BusType FROM MSFT_PhysicalDisk");
+
+                // Tomamos las primeras dos palabras del nombre como token de búsqueda.
+                // Ejemplo: "Samsung SSD 970 EVO Plus" → buscamos "Samsung SSD" en FriendlyName.
+                string[] words = diskName.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                string searchToken = words.Length >= 2
+                    ? $"{words[0]} {words[1]}"
+                    : diskName;
+
+                foreach (ManagementBaseObject obj in collection)
+                {
+                    string friendly = obj["FriendlyName"]?.ToString() ?? string.Empty;
+                    if (!friendly.StartsWith(searchToken, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    int busType = Convert.ToInt32(obj["BusType"]);
+                    return busType switch
+                    {
+                        17 => "NVMe",
+                        11 => "SATA",
+                        8 => "RAID", // aunque RAID puede incluir discos SATA o NVMe, lo etiquetamos aparte porque el acceso SMART suele ser distinto
+                        7 => "USB / Externo",
+                        3 => "ATA",
+                        _ => null          // desconocido → continúa con el fallback
+                    };
+                }
+            }
+            catch
+            {
+                // WMI no disponible — el caller continúa con el paso 4
+            }
+            return null;
         }
     }
 }

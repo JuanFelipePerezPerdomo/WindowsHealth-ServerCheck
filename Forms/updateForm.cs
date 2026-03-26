@@ -10,9 +10,12 @@ namespace WindowsHealth_ServerCheck.Forms
         public List<string> FinalLog { get; private set; } = new List<string>();
         public UpdateResult UpdateResult { get; private set; }
 
+        // Controla si se instalan las actualizaciones o solo se consultan
+        private readonly bool _installUpdates;
+
         public class DownloadProgressWatcher : IDownloadProgressChangedCallback
         {
-            private ProgressBar _pb;
+            private readonly ProgressBar _pb;
             public DownloadProgressWatcher(ProgressBar pb) => _pb = pb;
 
             public void Invoke(IDownloadJob downloadJob, IDownloadProgressChangedCallbackArgs callbackArgs)
@@ -34,14 +37,24 @@ namespace WindowsHealth_ServerCheck.Forms
             public void Invoke(IInstallationJob installationJob, IInstallationCompletedCallbackArgs callbackArgs) { }
         }
 
-        public updateForm()
+        /// <param name="installUpdates">
+        /// Viene del estado del checkbox en mainForm.
+        /// false → solo consulta. true → descarga e instala.
+        /// </param>
+        public updateForm(bool installUpdates = false)
         {
             InitializeComponent();
+            _installUpdates = installUpdates;
             this.Shown += UpdateForm_Shown;
         }
 
         private void UpdateForm_Shown(object sender, EventArgs e)
         {
+            // Ajustar el título del formulario según el modo
+            this.Text = _installUpdates
+                ? "Windows Update — Instalando actualizaciones"
+                : "Windows Update — Consultando actualizaciones";
+
             Task.Run(() => StartUpdateProccess());
         }
 
@@ -58,18 +71,29 @@ namespace WindowsHealth_ServerCheck.Forms
                 });
             };
 
-            var (finalLog, updateResult) = WindowsUpdater.updateBrowser(updateLog, watcher, downloadCompleted, null);
+            var (finalLog, updateResult) = WindowsUpdater.updateBrowser(
+                updateLog,
+                watcher,
+                downloadCompleted,
+                null,
+                _installUpdates);
 
             UpdateResult = updateResult;
             FinalLog = finalLog;
 
-            string header = $"Windows Update - {DateTime.Now:dd/MM/yyyy HH:mm:ss}";
+            string header = _installUpdates
+                ? $"Windows Update (instalación) - {DateTime.Now:dd/MM/yyyy HH:mm:ss}"
+                : $"Windows Update (consulta)    - {DateTime.Now:dd/MM/yyyy HH:mm:ss}";
+
             HistoryLogger.Save(header, finalLog);
 
             this.Invoke((MethodInvoker)delegate
             {
                 pb_Process.Value = 100;
-                MessageBox.Show("Proceso finalizado.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                string msg = _installUpdates
+                    ? "Proceso de actualización finalizado."
+                    : "Consulta de actualizaciones finalizada.";
+                MessageBox.Show(msg, "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 this.Close();
             });
         }

@@ -149,7 +149,7 @@ namespace WindowsHealth_ServerCheck.Forms
         }
         private void btn_winUpdate_Click(object sender, EventArgs e)
         {
-            updateForm upForm = new updateForm();
+            updateForm upForm = new updateForm(chkBox_EnableSystemUpdate.Checked);
             upForm.FormClosed += (s, args) => { btn_winUpdate.Enabled = true; };
 
             upForm.ShowDialog();
@@ -160,13 +160,26 @@ namespace WindowsHealth_ServerCheck.Forms
                 _auditResult.UpdatesExecuted = true;
 
                 UpdateResult upResult = upForm.UpdateResult;
+                bool installing = chkBox_EnableSystemUpdate.Checked;
 
                 lab_foundUpd.Text = upResult.UpdatesFound.ToString();
                 lab_foundUpd.ForeColor = Color.Black;
-                lab_succesUpd.Text = upResult.UpdatesInstalled.ToString();
-                lab_succesUpd.ForeColor = (upResult.UpdatesInstalled > 0) ? Color.Green : Color.Black;
-                lab_failedUpd.Text = (upResult.UpdatesFound - upResult.UpdatesInstalled).ToString();
-                lab_failedUpd.ForeColor = (upResult.UpdatesFound - upResult.UpdatesInstalled) > 0 ? Color.Red : Color.Black;
+
+                if (installing)
+                {
+                    lab_succesUpd.Text = upResult.UpdatesInstalled.ToString();
+                    lab_succesUpd.ForeColor = upResult.UpdatesInstalled > 0 ? Color.Green : Color.Black;
+                    lab_failedUpd.Text = (upResult.UpdatesFound - upResult.UpdatesInstalled).ToString();
+                    lab_failedUpd.ForeColor = (upResult.UpdatesFound - upResult.UpdatesInstalled) > 0
+                        ? Color.Red : Color.Black;
+                }
+                else
+                {
+                    lab_succesUpd.Text = "N/A";
+                    lab_succesUpd.ForeColor = Color.Gray;
+                    lab_failedUpd.Text = "N/A";
+                    lab_failedUpd.ForeColor = Color.Gray;
+                }
             }
         }
 
@@ -262,13 +275,13 @@ namespace WindowsHealth_ServerCheck.Forms
                     comB_diskName.SelectedIndex = 0;
 
                 // — Drivers UI
-                lab_TotalDriversScan.Text = audit.Drivers.ToString();
+                lab_TotalDriversScan.Text = audit.Drivers.TotalDrivers.ToString();
                 lab_driverNotUpdated.Text = audit.Drivers.OutdatedDrivers.ToString();
                 lab_driverNotUpdated.ForeColor = audit.Drivers.OutdatedDrivers > 0 ? Color.Red : Color.Green;
 
                 // — Windows Update UI
                 List<string> updateLog = new List<string>();
-                updateForm upForm = new updateForm();
+                updateForm upForm = new updateForm(chkBox_EnableSystemUpdate.Checked);
                 upForm.ShowDialog();
 
                 if (upForm.UpdateResult != null)
@@ -276,12 +289,27 @@ namespace WindowsHealth_ServerCheck.Forms
                     _auditResult.Updates = upForm.UpdateResult;
                     _auditResult.UpdatesExecuted = true;
                     updateLog = upForm.FinalLog;
+                    bool installing = chkBox_EnableSystemUpdate.Checked;
 
                     lab_foundUpd.Text = upForm.UpdateResult.UpdatesFound.ToString();
                     lab_foundUpd.ForeColor = Color.Black;
-                    lab_succesUpd.Text = upForm.UpdateResult.UpdatesInstalled.ToString();
-                    lab_failedUpd.Text = (upForm.UpdateResult.UpdatesFound -
-                                          upForm.UpdateResult.UpdatesInstalled).ToString();
+
+                    if (installing)
+                    {
+                        lab_succesUpd.Text = upForm.UpdateResult.UpdatesInstalled.ToString();
+                        lab_succesUpd.ForeColor = upForm.UpdateResult.UpdatesInstalled > 0 ? Color.Green : Color.Black;
+                        lab_failedUpd.Text = (upForm.UpdateResult.UpdatesFound -
+                                                  upForm.UpdateResult.UpdatesInstalled).ToString();
+                        lab_failedUpd.ForeColor = (upForm.UpdateResult.UpdatesFound -
+                                                  upForm.UpdateResult.UpdatesInstalled) > 0 ? Color.Red : Color.Black;
+                    }
+                    else
+                    {
+                        lab_succesUpd.Text = "N/A";
+                        lab_succesUpd.ForeColor = Color.Gray;
+                        lab_failedUpd.Text = "N/A";
+                        lab_failedUpd.ForeColor = Color.Gray;
+                    }
                 }
 
                 // Histórico Completo
@@ -345,8 +373,8 @@ namespace WindowsHealth_ServerCheck.Forms
 
             // El usuario canceló o cerró sin completar
             MessageBox.Show(
-                "El informe no se ha generado porque el formulario de DfServer no fue completado.\n\n" +
-                "Puedes desmarcar la opción 'DfServer' si no necesitas incluir esta sección.",
+                "El informe no se ha generado porque el formulario de DF-Server no fue completado.\n\n" +
+                "Puedes desmarcar la opción 'DF-Server' si no necesitas incluir esta sección.",
                 "Informe no generado",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
@@ -355,6 +383,19 @@ namespace WindowsHealth_ServerCheck.Forms
         }
 
         private void chkbox_dfserver_CheckedChanged(object sender, EventArgs e) { }
+
+        private void chkBox_EnableSystemUpdate_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkBox_EnableSystemUpdate.Checked)
+            {
+                MessageBox.Show("¡Recuerda que al activar esta opción estás habilitando " +
+                    "la actualización automática del sistema operativo!",
+                    "Advertencia",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+            }
+        }
 
         private void btn_openWinUpdPanel_Click(object sender, EventArgs e)
         {

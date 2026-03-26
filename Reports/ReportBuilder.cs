@@ -95,8 +95,7 @@ namespace WindowsHealth_ServerCheck.Reports
                 });
                 AddRow(table, "Archivos eliminados", cleanUp.DeleteFiles.ToString());
                 AddRow(table, "Carpetas eliminadas", cleanUp.DeleteDirs.ToString());
-                AddRow(table, "Espacio liberado", FormatBytesHelper.FormatBytes(cleanUp.FreedBytes));
-                AddRow(table, "Fecha de ejecución", cleanUp.Date.ToString("dd/MM/yyyy HH:mm:ss"));
+                AddRow(table, "Espacio liberado", FormatBytesHelper.FormatBytes(cleanUp.FreedBytes));            
             });
         }
 
@@ -169,7 +168,6 @@ namespace WindowsHealth_ServerCheck.Reports
                 AddRow(table, "Actualizaciones instaladas", updates.UpdatesInstalled.ToString());
                 AddRow(table, "Estado", updates.Success ? "Correcto" : "Con errores",
                     updates.Success ? "#27AE60" : "#E74C3C");
-                AddRow(table, "Fecha de ejecución", updates.Date.ToString("dd/MM/yyyy HH:mm:ss"));
             });
 
             if (updates.UpdateTitles?.Count > 0)
@@ -194,7 +192,6 @@ namespace WindowsHealth_ServerCheck.Reports
                 AddRow(table, "Drivers escaneados", drivers.TotalDrivers.ToString());
                 AddRow(table, "Drivers desactualizados", drivers.OutdatedDrivers.ToString(),
                     drivers.OutdatedDrivers > 0 ? "#E74C3C" : "#27AE60");
-                AddRow(table, "Fecha de ejecución", drivers.Date.ToString("dd/MM/yyyy HH:mm:ss"));
             });
 
             var outdated = drivers.Drivers.FindAll(d => d.IsOutdated);

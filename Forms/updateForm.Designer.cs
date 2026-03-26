@@ -28,39 +28,43 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.pb_Process = new System.Windows.Forms.ProgressBar();
-            this.txt_Logs = new System.Windows.Forms.RichTextBox();
-            this.SuspendLayout();
+            pb_Process = new ProgressBar();
+            txt_Logs = new RichTextBox();
+            SuspendLayout();
             // 
             // pb_Process
             // 
-            this.pb_Process.Location = new System.Drawing.Point(12, 112);
-            this.pb_Process.Name = "pb_Process";
-            this.pb_Process.Size = new System.Drawing.Size(293, 28);
-            this.pb_Process.TabIndex = 0;
+            pb_Process.Location = new Point(14, 129);
+            pb_Process.Margin = new Padding(4, 3, 4, 3);
+            pb_Process.Name = "pb_Process";
+            pb_Process.Size = new Size(342, 32);
+            pb_Process.TabIndex = 0;
             // 
             // txt_Logs
             // 
-            this.txt_Logs.Location = new System.Drawing.Point(12, 12);
-            this.txt_Logs.Name = "txt_Logs";
-            this.txt_Logs.Size = new System.Drawing.Size(293, 83);
-            this.txt_Logs.TabIndex = 1;
-            this.txt_Logs.Text = "";
+            txt_Logs.Location = new Point(14, 14);
+            txt_Logs.Margin = new Padding(4, 3, 4, 3);
+            txt_Logs.Name = "txt_Logs";
+            txt_Logs.Size = new Size(341, 95);
+            txt_Logs.TabIndex = 1;
+            txt_Logs.Text = "";
             // 
             // updateForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(317, 152);
-            this.ControlBox = false;
-            this.Controls.Add(this.txt_Logs);
-            this.Controls.Add(this.pb_Process);
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "updateForm";
-            this.ShowInTaskbar = false;
-            this.Text = "Actualizando...";
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(370, 175);
+            ControlBox = false;
+            Controls.Add(txt_Logs);
+            Controls.Add(pb_Process);
+            Cursor = Cursors.AppStarting;
+            Margin = new Padding(4, 3, 4, 3);
+            MaximizeBox = false;
+            MinimizeBox = false;
+            Name = "updateForm";
+            ShowInTaskbar = false;
+            Text = "Actualizando...";
+            ResumeLayout(false);
 
         }
 

@@ -47,7 +47,17 @@ namespace WindowsHealth_ServerCheck.Forms
             rad_sigYes.CheckedChanged += (s, e) => RefreshSectionVisibility();
             rad_certYes.CheckedChanged += (s, e) => RefreshSectionVisibility();
             nud_signatureNumber.ValueChanged += (s, e) => RefreshSignatureWarning();
+            nud_signatureNumber.TextChanged += (s, e) => RefreshSignatureWarning();
+            nud_signatureNumber.Leave += (s, e) => {
+                if (string.IsNullOrWhiteSpace(nud_signatureNumber.Text))
+                    nud_signatureNumber.Value = nud_signatureNumber.Minimum;
+            };
             nud_certsNum.ValueChanged += (s, e) => RebuildCertRows();
+            nud_certsNum.TextChanged += (s, e) => RebuildCertRows();
+            nud_certsNum.Leave += (s, e) => {
+                if (string.IsNullOrWhiteSpace(nud_certsNum.Text))
+                    nud_certsNum.Value = nud_certsNum.Minimum;
+            };
             btn_generateForm.Click += btn_generateForm_Click;
             btn_cancel.Click += btn_cancel_Click;
         }
@@ -85,7 +95,7 @@ namespace WindowsHealth_ServerCheck.Forms
             _innerPanel.Height = count * CertRowHeight;
 
             // Forzar scroll al inicio al reconstruir
-            pnl_certRows.AutoScrollPosition = new System.Drawing.Point(0, 0);
+            pnl_certRows.AutoScrollPosition = new Point(0, 0);
         }
 
         private void AddCertRow(int index, int top)
@@ -97,8 +107,8 @@ namespace WindowsHealth_ServerCheck.Forms
                 Width = _innerPanel.Width,
                 Height = CertRowHeight - 2,
                 BackColor = index % 2 == 0
-                    ? System.Drawing.Color.WhiteSmoke
-                    : System.Drawing.Color.Transparent,
+                    ? Color.WhiteSmoke
+                    : Color.Transparent,
             };
 
             int x = 4;
@@ -174,19 +184,19 @@ namespace WindowsHealth_ServerCheck.Forms
             if (expiration < today)
             {
                 labStatus.Text = "Caducado";
-                labStatus.ForeColor = System.Drawing.Color.Crimson;
+                labStatus.ForeColor = Color.Crimson;
                 chk.Visible = true;
             }
             else if (expiration <= today.AddMonths(3))
             {
                 labStatus.Text = "Caduca pronto";
-                labStatus.ForeColor = System.Drawing.Color.DarkOrange;
+                labStatus.ForeColor = Color.DarkOrange;
                 chk.Visible = true;
             }
             else
             {
                 labStatus.Text = "Vigente";
-                labStatus.ForeColor = System.Drawing.Color.SeaGreen;
+                labStatus.ForeColor = Color.SeaGreen;
                 chk.Visible = false;
                 chk.Checked = false;
             }

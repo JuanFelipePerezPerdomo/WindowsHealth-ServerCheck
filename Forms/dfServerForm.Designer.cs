@@ -81,33 +81,36 @@
             pnl_digitization.BackColor = Color.Khaki;
             pnl_digitization.Controls.Add(chk_digConfigurate);
             pnl_digitization.Controls.Add(lab_digReq);
-            pnl_digitization.Location = new Point(12, 52);
+            pnl_digitization.Dock = DockStyle.Bottom;
+            pnl_digitization.Location = new Point(3, 61);
             pnl_digitization.Name = "pnl_digitization";
-            pnl_digitization.Size = new Size(530, 32);
+            pnl_digitization.Size = new Size(550, 32);
             pnl_digitization.TabIndex = 2;
             pnl_digitization.Visible = false;
             // 
             // chk_digConfigurate
             // 
-            chk_digConfigurate.Location = new Point(0, 5);
+            chk_digConfigurate.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            chk_digConfigurate.Location = new Point(3, 3);
             chk_digConfigurate.Name = "chk_digConfigurate";
-            chk_digConfigurate.Size = new Size(260, 22);
+            chk_digConfigurate.Size = new Size(280, 22);
             chk_digConfigurate.TabIndex = 0;
             chk_digConfigurate.Text = "¿Esta Configurada Correctamente?";
             // 
             // lab_digReq
             // 
+            lab_digReq.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             lab_digReq.ForeColor = Color.Crimson;
-            lab_digReq.Location = new Point(424, 5);
+            lab_digReq.Location = new Point(427, 5);
             lab_digReq.Name = "lab_digReq";
-            lab_digReq.Size = new Size(80, 18);
+            lab_digReq.Size = new Size(100, 18);
             lab_digReq.TabIndex = 1;
             lab_digReq.Text = "Obligatorio";
             // 
             // rad_digNo
             // 
             rad_digNo.Checked = true;
-            rad_digNo.Location = new Point(280, 24);
+            rad_digNo.Location = new Point(278, 21);
             rad_digNo.Name = "rad_digNo";
             rad_digNo.Size = new Size(60, 22);
             rad_digNo.TabIndex = 1;
@@ -116,9 +119,10 @@
             // 
             // rad_digYes
             // 
-            rad_digYes.Location = new Point(12, 24);
+            rad_digYes.Dock = DockStyle.Top;
+            rad_digYes.Location = new Point(3, 21);
             rad_digYes.Name = "rad_digYes";
-            rad_digYes.Size = new Size(260, 22);
+            rad_digYes.Size = new Size(550, 22);
             rad_digYes.TabIndex = 0;
             rad_digYes.Text = "Sí, tiene digitalización certificada";
             // 
@@ -140,9 +144,9 @@
             pnl_dfSignature.Controls.Add(pnl_sigWarning);
             pnl_dfSignature.Controls.Add(nud_signatureNumber);
             pnl_dfSignature.Controls.Add(lab_sigCount);
-            pnl_dfSignature.Location = new Point(12, 52);
+            pnl_dfSignature.Location = new Point(3, 52);
             pnl_dfSignature.Name = "pnl_dfSignature";
-            pnl_dfSignature.Size = new Size(530, 66);
+            pnl_dfSignature.Size = new Size(553, 66);
             pnl_dfSignature.TabIndex = 2;
             pnl_dfSignature.Visible = false;
             // 
@@ -151,15 +155,16 @@
             pnl_sigWarning.BackColor = Color.Khaki;
             pnl_sigWarning.Controls.Add(chk_clientNotificateSignatures);
             pnl_sigWarning.Controls.Add(lab_sigReq);
-            pnl_sigWarning.Location = new Point(0, 36);
+            pnl_sigWarning.Location = new Point(3, 36);
             pnl_sigWarning.Name = "pnl_sigWarning";
-            pnl_sigWarning.Size = new Size(530, 26);
+            pnl_sigWarning.Size = new Size(550, 26);
             pnl_sigWarning.TabIndex = 2;
             pnl_sigWarning.Visible = false;
             // 
             // chk_clientNotificateSignatures
             // 
-            chk_clientNotificateSignatures.Location = new Point(6, 3);
+            chk_clientNotificateSignatures.Anchor = AnchorStyles.None;
+            chk_clientNotificateSignatures.Location = new Point(6, 4);
             chk_clientNotificateSignatures.Name = "chk_clientNotificateSignatures";
             chk_clientNotificateSignatures.Size = new Size(410, 20);
             chk_clientNotificateSignatures.TabIndex = 0;
@@ -167,18 +172,19 @@
             // 
             // lab_sigReq
             // 
+            lab_sigReq.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             lab_sigReq.ForeColor = Color.Crimson;
-            lab_sigReq.Location = new Point(424, 5);
+            lab_sigReq.Location = new Point(430, 5);
             lab_sigReq.Name = "lab_sigReq";
-            lab_sigReq.Size = new Size(89, 18);
+            lab_sigReq.Size = new Size(109, 18);
             lab_sigReq.TabIndex = 1;
             lab_sigReq.Text = "Obligatorio";
             // 
             // nud_signatureNumber
             // 
-            nud_signatureNumber.Location = new Point(248, 7);
+            nud_signatureNumber.Anchor = AnchorStyles.Top;
+            nud_signatureNumber.Location = new Point(259, 7);
             nud_signatureNumber.Maximum = new decimal(new int[] { 9999, 0, 0, 0 });
-            nud_signatureNumber.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             nud_signatureNumber.Name = "nud_signatureNumber";
             nud_signatureNumber.Size = new Size(80, 25);
             nud_signatureNumber.TabIndex = 1;
@@ -186,9 +192,10 @@
             // 
             // lab_sigCount
             // 
-            lab_sigCount.Location = new Point(0, 6);
+            lab_sigCount.Dock = DockStyle.Top;
+            lab_sigCount.Location = new Point(0, 0);
             lab_sigCount.Name = "lab_sigCount";
-            lab_sigCount.Size = new Size(240, 22);
+            lab_sigCount.Size = new Size(553, 22);
             lab_sigCount.TabIndex = 0;
             lab_sigCount.Text = "¿Con Cuántas firmas Cuenta?";
             lab_sigCount.TextAlign = ContentAlignment.MiddleLeft;
@@ -205,9 +212,10 @@
             // 
             // rad_sigYes
             // 
-            rad_sigYes.Location = new Point(12, 24);
+            rad_sigYes.Dock = DockStyle.Top;
+            rad_sigYes.Location = new Point(3, 21);
             rad_sigYes.Name = "rad_sigYes";
-            rad_sigYes.Size = new Size(240, 22);
+            rad_sigYes.Size = new Size(550, 22);
             rad_sigYes.TabIndex = 0;
             rad_sigYes.Text = "Sí, tiene firmas de DF-Signature";
             // 
@@ -365,7 +373,7 @@
             MinimizeBox = false;
             Name = "dfServerForm";
             StartPosition = FormStartPosition.CenterParent;
-            Text = "Datos DfServer";
+            Text = "Datos DF-Server";
             grp_digitization.ResumeLayout(false);
             pnl_digitization.ResumeLayout(false);
             grp_dfSignature.ResumeLayout(false);
