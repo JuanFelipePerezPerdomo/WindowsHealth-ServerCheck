@@ -435,6 +435,18 @@ namespace WindowsHealth_ServerCheck.Forms
             }
         }
 
+        private void btn_viewAllDisk_Click(object sender, EventArgs e)
+        {
+            // Verificamos que haya datos antes de abrir
+            if (_auditResult?.Disks == null) return;
+
+            // Pasamos la lista de discos por el constructor
+            viewDiskForm diskView = new viewDiskForm(_auditResult.Disks);
+            diskView.FormClosed += (s, args) => { btn_winUpdate.Enabled = true; };
+
+            diskView.ShowDialog();
+        }
+
         // Selección de disco
         private void comB_diskName_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -502,6 +514,7 @@ namespace WindowsHealth_ServerCheck.Forms
             label.ForeColor = color;
         }
 
+        // eliminar 
         private void btn_temp_diagnostic_Click(object sender, EventArgs e)
         {
             var log = SmartDiagnostic.Run();
@@ -509,5 +522,6 @@ namespace WindowsHealth_ServerCheck.Forms
             foreach (string line in log)
                 txt_healtInformation.AppendText(line + Environment.NewLine);
         }
+
     }
 }

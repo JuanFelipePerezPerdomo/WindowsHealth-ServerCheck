@@ -84,7 +84,7 @@
             chkbox_dfserver = new CheckBox();
             pictureBox2 = new PictureBox();
             label17 = new Label();
-            comboBox1 = new ComboBox();
+            comB_techicianName = new ComboBox();
             panel1.SuspendLayout();
             groupBox1.SuspendLayout();
             tableLayoutPanel2.SuspendLayout();
@@ -385,6 +385,7 @@
             btn_viewAllDisk.TabIndex = 3;
             btn_viewAllDisk.Text = "Ver todos los Discos";
             btn_viewAllDisk.UseVisualStyleBackColor = true;
+            btn_viewAllDisk.Click += btn_viewAllDisk_Click;
             // 
             // tableLayoutPanel1
             // 
@@ -827,14 +828,14 @@
             label17.TabIndex = 21;
             label17.Text = "Tecnico:";
             // 
-            // comboBox1
+            // comB_techicianName
             // 
-            comboBox1.FormattingEnabled = true;
-            comboBox1.Items.AddRange(new object[] { "Francisco Muñoz", "Himar", "Mencey", "Aaron", "Fabio" });
-            comboBox1.Location = new Point(464, 97);
-            comboBox1.Name = "comboBox1";
-            comboBox1.Size = new Size(320, 23);
-            comboBox1.TabIndex = 22;
+            comB_techicianName.FormattingEnabled = true;
+            comB_techicianName.Items.AddRange(new object[] { "Francisco Muñoz", "Himar Bautista", "Mencey Medina", "Aaron Ojeda" });
+            comB_techicianName.Location = new Point(464, 97);
+            comB_techicianName.Name = "comB_techicianName";
+            comB_techicianName.Size = new Size(320, 23);
+            comB_techicianName.TabIndex = 22;
             // 
             // mainForm
             // 
@@ -843,7 +844,7 @@
             BackColor = Color.MintCream;
             BackgroundImageLayout = ImageLayout.None;
             ClientSize = new Size(924, 648);
-            Controls.Add(comboBox1);
+            Controls.Add(comB_techicianName);
             Controls.Add(label17);
             Controls.Add(pictureBox2);
             Controls.Add(chkbox_dfserver);
@@ -862,6 +863,7 @@
             FormBorderStyle = FormBorderStyle.FixedSingle;
             Margin = new Padding(4, 3, 4, 3);
             Name = "mainForm";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "Health Check";
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
@@ -943,7 +945,7 @@
         private CheckBox chkbox_dfserver;
         private PictureBox pictureBox2;
         private Label label17;
-        private ComboBox comboBox1;
+        private ComboBox comB_techicianName;
         private CheckBox chkBox_EnableSystemUpdate;
     }
 }

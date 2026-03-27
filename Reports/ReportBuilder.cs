@@ -95,7 +95,8 @@ namespace WindowsHealth_ServerCheck.Reports
                 });
                 AddRow(table, "Archivos eliminados", cleanUp.DeleteFiles.ToString());
                 AddRow(table, "Carpetas eliminadas", cleanUp.DeleteDirs.ToString());
-                AddRow(table, "Espacio liberado", FormatBytesHelper.FormatBytes(cleanUp.FreedBytes));            
+                AddRow(table, "Espacio liberado", FormatBytesHelper.FormatBytes(cleanUp.FreedBytes));
+                AddRow(table, "Fecha de ejecución", cleanUp.Date.ToString("dd/MM/yyyy HH:mm:ss"));
             });
         }
 
@@ -103,54 +104,103 @@ namespace WindowsHealth_ServerCheck.Reports
         {
             col.Item().Element(SectionTitle("Protocolo S.M.A.R.T"));
 
-            foreach (SmartResult disk in disks)
+            col.Item().Table(table =>
             {
-                // Cabecera: nombre del disco + tipo de interfaz
-                col.Item().PaddingBottom(2).Row(row =>
+                table.ColumnsDefinition(c =>
                 {
-                    row.RelativeItem().Text(disk.DiskName)
-                        .FontSize(9).FontColor("#7F8C8D").Italic();
-                    row.AutoItem().Text($"  [{disk.InterfaceType ?? "Unknown"}]")
-                        .FontSize(9).FontColor("#95A5A6").Italic();
+                    c.RelativeColumn(3);  // Disco       — más ancho por el nombre
+                    c.RelativeColumn(2);  // Tipo
+                    c.RelativeColumn(2);  // Falla inminente
+                    c.RelativeColumn(2);  // Temperatura
+                    c.RelativeColumn(2);  // Horas de uso
+                    c.RelativeColumn(2);  // Salud del disco
                 });
 
-                // Disco sin datos SMART (USB u otro bus externo)
-                if (!disk.HasSmartData)
+                table.Header(header =>
                 {
-                    col.Item().PaddingLeft(4).PaddingBottom(8)
-                        .Text("SMART no disponible para este tipo de dispositivo.")
-                        .FontSize(9).FontColor("#E67E22").Italic();
-                    continue;
-                }
+                    header.Cell().Element(HeaderCell).Text("Disco");
+                    header.Cell().Element(HeaderCell).Text("Tipo");
+                    header.Cell().Element(HeaderCell).Text("Falla inminente");
+                    header.Cell().Element(HeaderCell).Text("Temperatura");
+                    header.Cell().Element(HeaderCell).Text("Horas de uso");
+                    header.Cell().Element(HeaderCell).Text("Salud del disco");
+                });
 
-                col.Item().Table(table =>
+                foreach (SmartResult disk in disks)
                 {
-                    table.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); });
-                    table.Header(header =>
+                    // Disco
+                    table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                        .Text(disk.DiskName).FontSize(9);
+
+                    // Tipo
+                    table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                        .Text(disk.InterfaceType ?? "Unknown").FontSize(9);
+
+                    // Falla inminente
+                    if (!disk.HasSmartData)
                     {
-                        header.Cell().Element(HeaderCell).Text("Atributo");
-                        header.Cell().Element(HeaderCell).Text("Valor");
-                    });
+                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                            .Text(t => t.Span("N/A").FontColor("#95A5A6").FontSize(9));
+                    }
+                    else if (!disk.PredictFailureResolved)
+                    {
+                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                            .Text(t => t.Span("N/D").FontColor("#95A5A6").FontSize(9));
+                    }
+                    else
+                    {
+                        string failText = disk.PredictFailure ? "SÍ" : "No";
+                        string failColor = disk.PredictFailure ? "#E74C3C" : "#27AE60";
+                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                            .Text(t => t.Span(failText).FontColor(failColor).Bold().FontSize(9));
+                    }
 
-                    if (disk.Temperature > 0)
-                        AddRow(table, "Temperatura", $"{disk.Temperature} °C",
-                            disk.Temperature > 55 ? "#E74C3C" : null);
+                    // Temperatura
+                    if (!disk.HasSmartData || disk.Temperature == 0)
+                    {
+                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                            .Text(t => t.Span("N/D").FontColor("#95A5A6").FontSize(9));
+                    }
+                    else
+                    {
+                        string tempColor = disk.Temperature < 45 ? "#27AE60"
+                                         : disk.Temperature <= 55 ? "#E67E22"
+                                         : "#E74C3C";
+                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                            .Text(t => t.Span($"{disk.Temperature} °C").FontColor(tempColor).FontSize(9));
+                    }
 
-                    if (disk.HasHealthData)
-                        AddRow(table, "Vida útil restante", $"{disk.HealthPercent}%",
-                            disk.HealthPercent < 10 ? "#E74C3C" : null);
+                    // Horas de uso
+                    if (!disk.HasSmartData || disk.HoursUsed == 0)
+                    {
+                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                            .Text(t => t.Span("N/D").FontColor("#95A5A6").FontSize(9));
+                    }
+                    else
+                    {
+                        string hoursColor = disk.HoursUsed < 20000 ? "#27AE60"
+                                          : disk.HoursUsed < 40000 ? "#E67E22"
+                                          : "#E74C3C";
+                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                            .Text(t => t.Span($"{disk.HoursUsed} h").FontColor(hoursColor).FontSize(9));
+                    }
 
-                    if (disk.HoursUsed > 0)
-                        AddRow(table, "Horas de uso", $"{disk.HoursUsed} h");
-
-                    if (disk.HasHealthData)
-                        AddRow(table, "¿Falla inminente?",
-                            disk.PredictFailure ? "SÍ" : "No",
-                            disk.PredictFailure ? "#E74C3C" : "#27AE60");
-                });
-
-                col.Item().PaddingBottom(8);
-            }
+                    // Salud del disco
+                    if (!disk.HasHealthData)
+                    {
+                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                            .Text(t => t.Span("N/D").FontColor("#95A5A6").FontSize(9));
+                    }
+                    else
+                    {
+                        string healthColor = disk.HealthPercent >= 90 ? "#27AE60"
+                                           : disk.HealthPercent >= 60 ? "#E67E22"
+                                           : "#E74C3C";
+                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                            .Text(t => t.Span($"{disk.HealthPercent}%").FontColor(healthColor).FontSize(9));
+                    }
+                }
+            });
         }
 
         private static void ComposeUpdatesSection(ColumnDescriptor col, UpdateResult updates)
@@ -168,6 +218,7 @@ namespace WindowsHealth_ServerCheck.Reports
                 AddRow(table, "Actualizaciones instaladas", updates.UpdatesInstalled.ToString());
                 AddRow(table, "Estado", updates.Success ? "Correcto" : "Con errores",
                     updates.Success ? "#27AE60" : "#E74C3C");
+                AddRow(table, "Fecha de ejecución", updates.Date.ToString("dd/MM/yyyy HH:mm:ss"));
             });
 
             if (updates.UpdateTitles?.Count > 0)
@@ -192,6 +243,7 @@ namespace WindowsHealth_ServerCheck.Reports
                 AddRow(table, "Drivers escaneados", drivers.TotalDrivers.ToString());
                 AddRow(table, "Drivers desactualizados", drivers.OutdatedDrivers.ToString(),
                     drivers.OutdatedDrivers > 0 ? "#E74C3C" : "#27AE60");
+                AddRow(table, "Fecha de ejecución", drivers.Date.ToString("dd/MM/yyyy HH:mm:ss"));
             });
 
             var outdated = drivers.Drivers.FindAll(d => d.IsOutdated);
