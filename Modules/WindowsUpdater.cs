@@ -55,6 +55,7 @@ namespace WindowsHealth_ServerCheck.Modules
                 {
                     Logger("Modo consulta activo — no se realizarán descargas ni instalaciones.");
                     result.Success = true;
+                    result.IsQueryOnly = true;
                     return (log, result);
                 }
 
@@ -69,7 +70,7 @@ namespace WindowsHealth_ServerCheck.Modules
                 Logger("Descargando...");
                 IDownloadJob job = downloader.BeginDownload(progressWatcher, downloadCompleted, null);
                 while (!job.IsCompleted)
-                    System.Threading.Thread.Sleep(500);
+                    Thread.Sleep(500);
                 downloader.EndDownload(job);
                 Logger("Descarga completada.");
 
@@ -87,6 +88,7 @@ namespace WindowsHealth_ServerCheck.Modules
                 IInstallationResult installationResult = installer.Install();
                 result.UpdatesInstalled = updatesToInstall.Count;
                 result.Success = installationResult.ResultCode == OperationResultCode.orcSucceeded;
+                result.IsQueryOnly = false;
 
                 Logger($"Resultado: {installationResult.ResultCode}");
             }
@@ -94,6 +96,7 @@ namespace WindowsHealth_ServerCheck.Modules
             {
                 Logger("Error CRÍTICO: " + ex.Message);
                 result.Success = false;
+                result.IsQueryOnly = false;
             }
 
             return (log, result);

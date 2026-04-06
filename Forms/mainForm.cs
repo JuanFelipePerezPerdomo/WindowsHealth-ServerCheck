@@ -10,11 +10,13 @@ namespace WindowsHealth_ServerCheck.Forms
 {
     public partial class mainForm : Form
     {
-        private AuditResult _auditResult = new AuditResult();
+        private AuditResult _auditResult = new();
 
         public mainForm()
         {
             InitializeComponent();
+            btn_temp_diagnostic.Visible = false;
+            txt_healtInformation.Visible = false;
         }
 
         private async void btn_TempCleaner_Click(object sender, EventArgs e)
@@ -231,6 +233,9 @@ namespace WindowsHealth_ServerCheck.Forms
                 return;
             }
 
+            if (AssignTechnicianAndGenerate().Equals(false) )
+                return;
+                     
             if (chkbox_dfserver.Checked)
             {
                 if (!ShowDfServerForm()) return;
@@ -244,100 +249,131 @@ namespace WindowsHealth_ServerCheck.Forms
                 "Ejecutar Auditoria Completa",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
-            if (result == DialogResult.Yes)
+            if (result != DialogResult.Yes) return;
+
+            //  Validar técnico 
+            if (!AssignTechnicianAndGenerate()) return;
+
+            //  2. Formulario DfServer (si aplica) 
+            // Se recoge ANTES de lanzar los módulos para no interrumpir el proceso.
+            // Los datos se preservarán explícitamente tras el reemplazo de _auditResult.
+            if (chkbox_dfserver.Checked)
             {
-                if (chkbox_dfserver.Checked)
+                if (!ShowDfServerForm()) return;
+            }
+
+            // Guardamos los datos pre-módulos que deben sobrevivir al
+            // _auditResult = audit que hace AuditService.RunAll.
+            string savedTechnician = _auditResult.TechnicianName;
+            bool savedIsDfServer = _auditResult.IsDfServerTechnician;
+            var savedDfServer = _auditResult.DfServer;
+            bool savedDfServerExec = _auditResult.DfServerExecuted;
+
+            // 3. Deshabilitar controles 
+            btn_startEveryone.Enabled = false;
+            btn_startDriverComp.Enabled = false;
+            btn_smartProtocol.Enabled = false;
+            btn_TempCleaner.Enabled = false;
+            btn_GenerateAudit.Enabled = false;
+            btn_winUpdate.Enabled = false;
+            txt_healtInformation.Clear();
+
+            // Ejecutar módulos
+            var (audit, logs) = await AuditService.RunAll(log =>
+            {
+                txt_healtInformation.AppendText(log + Environment.NewLine);
+            });
+
+            // Reemplazamos _auditResult y restauramos lo que AuditService no conoce
+            _auditResult = audit;
+            _auditResult.TechnicianName = savedTechnician;
+            _auditResult.IsDfServerTechnician = savedIsDfServer;
+            _auditResult.DfServer = savedDfServer;
+            _auditResult.DfServerExecuted = savedDfServerExec;
+
+            // Actualizar UI
+
+            //  Cleanup
+            lab_deleteFiles.Text = audit.CleanUp.DeleteFiles.ToString();
+            lab_deleteDirs.Text = audit.CleanUp.DeleteDirs.ToString();
+            lab_totalSize.Text = FormatBytesHelper.FormatBytes(audit.CleanUp.FreedBytes);
+
+            // SMART
+            comB_diskName.Items.Clear();
+            foreach (SmartResult disk in audit.Disks)
+                comB_diskName.Items.Add($"{disk.DiskName}  [{disk.InterfaceType ?? "Unknown"}]");
+            if (comB_diskName.Items.Count > 0)
+                comB_diskName.SelectedIndex = 0;
+
+            btn_viewAllDisk.Enabled = true;
+
+            //  Drivers
+            lab_TotalDriversScan.Text = audit.Drivers.TotalDrivers.ToString();
+            lab_driverNotUpdated.Text = audit.Drivers.OutdatedDrivers.ToString();
+            lab_driverNotUpdated.ForeColor = audit.Drivers.OutdatedDrivers > 0 ? Color.Red : Color.Green;
+
+            // Windows Update 
+            List<string> updateLog = new List<string>();
+            updateForm upForm = new updateForm(chkBox_EnableSystemUpdate.Checked);
+            upForm.ShowDialog();
+
+            if (upForm.UpdateResult != null)
+            {
+                _auditResult.Updates = upForm.UpdateResult;
+                _auditResult.UpdatesExecuted = true;
+                updateLog = upForm.FinalLog;
+                bool installing = chkBox_EnableSystemUpdate.Checked;
+
+                lab_foundUpd.Text = upForm.UpdateResult.UpdatesFound.ToString();
+                lab_foundUpd.ForeColor = Color.Black;
+
+                if (installing)
                 {
-                    if (!ShowDfServerForm()) return;
-                }
-
-                btn_viewAllDisk.Enabled = true;
-                btn_startEveryone.Enabled = false;
-                btn_startDriverComp.Enabled = false;
-                txt_healtInformation.Clear();
-
-                var (audit, logs) = await AuditService.RunAll(log =>
-                {
-                    txt_healtInformation.AppendText(log + Environment.NewLine);
-                });
-
-                // — Cleanup UI
-                _auditResult = audit;
-                lab_deleteFiles.Text = audit.CleanUp.DeleteFiles.ToString();
-                lab_deleteDirs.Text = audit.CleanUp.DeleteDirs.ToString();
-                lab_totalSize.Text = FormatBytesHelper.FormatBytes(audit.CleanUp.FreedBytes);
-
-                // — SMART UI
-                comB_diskName.Items.Clear();
-                foreach (SmartResult disk in audit.Disks)
-                    comB_diskName.Items.Add($"{disk.DiskName}  [{disk.InterfaceType ?? "Unknown"}]");
-                if (comB_diskName.Items.Count > 0)
-                    comB_diskName.SelectedIndex = 0;
-
-                // — Drivers UI
-                lab_TotalDriversScan.Text = audit.Drivers.TotalDrivers.ToString();
-                lab_driverNotUpdated.Text = audit.Drivers.OutdatedDrivers.ToString();
-                lab_driverNotUpdated.ForeColor = audit.Drivers.OutdatedDrivers > 0 ? Color.Red : Color.Green;
-
-                // — Windows Update UI
-                List<string> updateLog = new List<string>();
-                updateForm upForm = new updateForm(chkBox_EnableSystemUpdate.Checked);
-                upForm.ShowDialog();
-
-                if (upForm.UpdateResult != null)
-                {
-                    _auditResult.Updates = upForm.UpdateResult;
-                    _auditResult.UpdatesExecuted = true;
-                    updateLog = upForm.FinalLog;
-                    bool installing = chkBox_EnableSystemUpdate.Checked;
-
-                    lab_foundUpd.Text = upForm.UpdateResult.UpdatesFound.ToString();
-                    lab_foundUpd.ForeColor = Color.Black;
-
-                    if (installing)
-                    {
-                        lab_succesUpd.Text = upForm.UpdateResult.UpdatesInstalled.ToString();
-                        lab_succesUpd.ForeColor = upForm.UpdateResult.UpdatesInstalled > 0 ? Color.Green : Color.Black;
-                        lab_failedUpd.Text = (upForm.UpdateResult.UpdatesFound -
-                                                  upForm.UpdateResult.UpdatesInstalled).ToString();
-                        lab_failedUpd.ForeColor = (upForm.UpdateResult.UpdatesFound -
-                                                  upForm.UpdateResult.UpdatesInstalled) > 0 ? Color.Red : Color.Black;
-                    }
-                    else
-                    {
-                        lab_succesUpd.Text = "N/A";
-                        lab_succesUpd.ForeColor = Color.Gray;
-                        lab_failedUpd.Text = "N/A";
-                        lab_failedUpd.ForeColor = Color.Gray;
-                    }
-                }
-
-                // Histórico Completo
-                string header = $"Auditoría Completa - {DateTime.Now:dd/MM/yyyy HH:mm:ss} \n";
-                List<string> fullLog = new List<string>();
-                foreach (var entry in logs)
-                    fullLog.AddRange(entry.Value);
-                fullLog.AddRange(updateLog);
-                HistoryLogger.Save(header, fullLog);
-
-                // Generar PDF solo si no hubo errores críticos
-                bool hasErrors = fullLog.Exists(l => l.StartsWith("Error CRÍTICO"));
-                if (hasErrors)
-                {
-                    MessageBox.Show(
-                        "Se detectaron errores durante la auditoría. Revisa el histórico antes de generar el informe.",
-                        "Errores detectados",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
+                    lab_succesUpd.Text = upForm.UpdateResult.UpdatesInstalled.ToString();
+                    lab_succesUpd.ForeColor = upForm.UpdateResult.UpdatesInstalled > 0 ? Color.Green : Color.Black;
+                    int failed = upForm.UpdateResult.UpdatesFound - upForm.UpdateResult.UpdatesInstalled;
+                    lab_failedUpd.Text = failed.ToString();
+                    lab_failedUpd.ForeColor = failed > 0 ? Color.Red : Color.Black;
                 }
                 else
                 {
-                    _auditResult.Date = DateTime.Now;
-                    ReportBuilder.Generate(_auditResult);
+                    lab_succesUpd.Text = "N/A";
+                    lab_succesUpd.ForeColor = Color.Gray;
+                    lab_failedUpd.Text = "N/A";
+                    lab_failedUpd.ForeColor = Color.Gray;
                 }
-                btn_startEveryone.Enabled = true;
-                btn_startDriverComp.Enabled = true;
             }
+
+            // Histórico y PDF
+            string header = $"Auditoría Completa - {DateTime.Now:dd/MM/yyyy HH:mm:ss} \n";
+            List<string> fullLog = new List<string>();
+            foreach (var entry in logs)
+                fullLog.AddRange(entry.Value);
+            fullLog.AddRange(updateLog);
+            HistoryLogger.Save(header, fullLog);
+
+            bool hasErrors = fullLog.Exists(l => l.StartsWith("Error CRÍTICO"));
+            if (hasErrors)
+            {
+                MessageBox.Show(
+                    "Se detectaron errores durante la auditoría. Revisa el histórico antes de generar el informe.",
+                    "Errores detectados",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+            else
+            {
+                _auditResult.Date = DateTime.Now;
+                ReportBuilder.Generate(_auditResult);
+            }
+
+            // Rehabilitar controles 
+            btn_startEveryone.Enabled = true;
+            btn_startDriverComp.Enabled = true;
+            btn_smartProtocol.Enabled = true;
+            btn_TempCleaner.Enabled = true;
+            btn_GenerateAudit.Enabled = true;
+            btn_winUpdate.Enabled = true;
         }
         private void btn_HealtHistory_Click(object sender, EventArgs e)
         {
@@ -521,6 +557,29 @@ namespace WindowsHealth_ServerCheck.Forms
             txt_healtInformation.Clear();
             foreach (string line in log)
                 txt_healtInformation.AppendText(line + Environment.NewLine);
+        }
+
+
+        // Validar si hay un tecnico seleccionado
+        public bool AssignTechnicianAndGenerate()
+        {
+            string techName = comB_techicianName.Text?.Trim() ?? string.Empty;
+
+            if(string.IsNullOrEmpty(techName))
+            {
+                MessageBox.Show(
+                    "Debes seleccionar un tecnico antes de generar el informe",
+                    "Tecnico no seleccionado",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                    );
+                return false;
+            }
+
+            _auditResult.TechnicianName = techName;
+            _auditResult.IsDfServerTechnician = chkbox_dfserver.Checked;
+
+            return true;
         }
 
     }

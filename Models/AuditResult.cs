@@ -2,6 +2,9 @@
 {
     public class AuditResult
     {
+        public string TechnicianName { get; set; } = string.Empty;
+        public bool IsDfServerTechnician { get; set; }
+
         public DateTime Date { get; set; }
         public CleanUpResult CleanUp { get; set; }
         public List<SmartResult> Disks { get; set; } = new List<SmartResult>();

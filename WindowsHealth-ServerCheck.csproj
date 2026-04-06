@@ -9,6 +9,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationManifest>app.manifest</ApplicationManifest>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+	<ApplicationIcon>Resources\Icon\copican_logo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,9 +25,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Resources\Icon\copican_logo.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Config\" />
     <Folder Include="Logs\" />
-    <Folder Include="Resources\Icon\" />
   </ItemGroup>
 
   <ItemGroup>

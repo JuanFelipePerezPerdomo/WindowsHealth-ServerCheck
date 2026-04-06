@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(mainForm));
             btn_TempCleaner = new Button();
             btn_smartProtocol = new Button();
             btn_winUpdate = new Button();
@@ -839,8 +840,8 @@
             // 
             // mainForm
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
-            AutoScaleMode = AutoScaleMode.Font;
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
             BackColor = Color.MintCream;
             BackgroundImageLayout = ImageLayout.None;
             ClientSize = new Size(924, 648);
@@ -861,7 +862,9 @@
             Controls.Add(panel1);
             Controls.Add(btn_startEveryone);
             FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Margin = new Padding(4, 3, 4, 3);
+            MaximizeBox = false;
             Name = "mainForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Health Check";

@@ -7,5 +7,7 @@
         public int UpdatesInstalled { get; set; }
         public List<string> UpdateTitles { get; set; } = new List<string>();
         public bool Success { get; set; }
+
+        public bool IsQueryOnly { get; set; }
     }
 }

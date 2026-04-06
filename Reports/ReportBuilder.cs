@@ -8,80 +8,127 @@ namespace WindowsHealth_ServerCheck.Reports
 {
     public class ReportBuilder
     {
+        private const string ColorPrimary = "#191970";
+        private const string ColorDfServer = "#fb9404";
+        private const string ColorTableHead = "#2E3D6E";
+        private const string ColorBorder = "#BDC3C7";
+        private const string ColorHeaderBg = "#D0D5E8";
+
         public static void Generate(AuditResult audit)
         {
-            using (SaveFileDialog dialog = new SaveFileDialog())
+            using SaveFileDialog dialog = new();
+            dialog.Title = "Guardar Informe";
+            dialog.Filter = "PDF (*.pdf) | *.pdf";
+            dialog.FileName = $"Informe_Servidor_{audit.Date:yyyy-MM-dd_HH-mm}";
+
+            if (dialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            string path = dialog.FileName;
+
+            byte[] watermarkBytes;
+            // Cargamos el logo para el fondo de página (watermark).
+            // con transparencia incorporada (~15-20% de opacidad recomendada).
+            using (MemoryStream ms = new MemoryStream())
             {
-                dialog.Title = "Guardar Informe";
-                dialog.Filter = "PDF (*.pdf) | *.pdf";
-                dialog.FileName = $"Informe_Servidor_{audit.Date:yyyy-MM-dd_HH-mm}";
+                // 1. Obtenemos el Bitmap del recurso
+                Properties.Resources.copican_logo.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
 
-                if (dialog.ShowDialog() != DialogResult.OK)
-                    return;
+                // 2. Lo convertimos a byte[]
+                byte[] copican_logo = ms.ToArray();
 
-                string path = dialog.FileName;
-
-                Document.Create(container =>
-                {
-                    container.Page(page =>
-                    {
-                        page.Size(PageSizes.A4);
-                        page.Margin(40);
-                        page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
-
-                        page.Header().Element(ComposeHeader);
-
-                        page.Content().Column(col =>
-                        {
-                            col.Spacing(20);
-
-                            if (audit.CleanupExecuted && audit.CleanUp != null)
-                                ComposeCleanUpSection(col, audit.CleanUp);
-
-                            if (audit.SmartExecuted && audit.Disks?.Count > 0)
-                                ComposeSmartSection(col, audit.Disks);
-
-                            if (audit.UpdatesExecuted && audit.Updates != null)
-                                ComposeUpdatesSection(col, audit.Updates);
-
-                            if (audit.DriversExecuted && audit.Drivers != null)
-                                ComposeDriversSection(col, audit.Drivers);
-
-                            if (audit.DfServerExecuted && audit.DfServer != null)
-                                ComposeDfServerSection(col, audit.DfServer);
-                        });
-
-                        page.Footer().AlignCenter().Text(text =>
-                        {
-                            text.Span("Generado el ");
-                            text.Span(audit.Date.ToString("dd/MM/yyyy HH:mm")).Bold();
-                            text.Span("  |  Página ");
-                            text.CurrentPageNumber();
-                            text.Span(" de ");
-                            text.TotalPages();
-                        });
-                    });
-                }).GeneratePdf(path);
-
-                MessageBox.Show("Informe generado correctamente.", "Informe PDF",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 3. llamamos a la funcion del helper que aplica transparencia
+                watermarkBytes = FormatBytesHelper.TransparentImages(copican_logo, 0.06f);
             }
+
+            Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(40);
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
+
+                    // Fondo de página (watermark) 
+                    // Se dibuja DEBAJO de todo el contenido. La imagen debe
+                    // tener transparencia para no tapar el texto.
+
+                    page.Background()
+                        .AlignCenter()
+                        .AlignMiddle()
+                        .Width(380)
+                        .Image(watermarkBytes)
+                        .FitWidth();
+
+
+                    page.Header().Element(c => ComposeHeader(c, audit));
+
+                    page.Content().PaddingTop(15).Column(col =>
+                    {
+                        col.Spacing(20);
+
+                        if (audit.CleanupExecuted && audit.CleanUp != null)
+                            ComposeCleanUpSection(col, audit.CleanUp);
+
+                        if (audit.SmartExecuted && audit.Disks?.Count > 0)
+                            ComposeSmartSection(col, audit.Disks);
+
+                        if (audit.UpdatesExecuted && audit.Updates != null)
+                            ComposeUpdatesSection(col, audit.Updates);
+
+                        if (audit.DriversExecuted && audit.Drivers != null)
+                            ComposeDriversSection(col, audit.Drivers);
+
+                        if (audit.DfServerExecuted && audit.DfServer != null)
+                            ComposeDfServerSection(col, audit.DfServer);
+                    });
+
+                    page.Footer().AlignCenter().PaddingTop(8).Text(text =>
+                    {
+                        text.Span("Generado el ");
+                        text.Span(audit.Date.ToString("dd/MM/yyyy HH:mm")).Bold();
+                        text.Span("  |  Página ");
+                        text.CurrentPageNumber();
+                        text.Span(" de ");
+                        text.TotalPages();
+                    });
+                });
+            }).GeneratePdf(path);
+
+            MessageBox.Show("Informe generado correctamente.", "Informe PDF",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private static void ComposeHeader(IContainer container)
+        // Cabecera
+        private static void ComposeHeader(IContainer container, AuditResult audit)
         {
-            container.BorderBottom(2).BorderColor("#2C3E50").PaddingBottom(8).Row(row =>
+            container.BorderBottom(2)
+                .BorderColor(ColorPrimary)
+                .PaddingBottom(8)
+                .PaddingTop(8)
+                .Row(row =>
             {
                 row.RelativeItem().Column(col =>
                 {
                     col.Item().Text("Health Check — Informe de Servidor")
-                        .FontSize(18).Bold().FontColor("#2C3E50");
-                    col.Item().Text($"Equipo: {Environment.MachineName}")
-                        .FontSize(10).FontColor("#7F8C8D");
+                        .FontSize(18).Bold().FontColor(ColorPrimary);
+
+                    col.Item().Row(r =>
+                    {
+                        r.AutoItem().Text($"Equipo: {Environment.MachineName}").SemiBold()
+                            .FontSize(10).FontColor("#7F8C8D");
+                        r.AutoItem().Text("   |   ").FontSize(10).FontColor("#BDC3C7");
+                        r.AutoItem().Text($"  Técnico: {audit.TechnicianName}").SemiBold()
+                            .FontSize(10).FontColor("#7F8C8D");
+                        r.AutoItem().Text("   |   ").FontSize(10).FontColor("#BDC3C7");
+                        r.AutoItem().Text($"  Incluye DF-Server: {(audit.IsDfServerTechnician ? "Sí" : "No")}").SemiBold()
+                            .FontSize(10).FontColor(audit.IsDfServerTechnician ? ColorDfServer : "#7F8C8D");
+                    });
                 });
             });
         }
 
+        // Limpieza
         private static void ComposeCleanUpSection(ColumnDescriptor col, CleanUpResult cleanUp)
         {
             col.Item().Element(SectionTitle("Limpieza de Archivos Temporales"));
@@ -100,6 +147,7 @@ namespace WindowsHealth_ServerCheck.Reports
             });
         }
 
+        // S.M.A.R.T 
         private static void ComposeSmartSection(ColumnDescriptor col, List<SmartResult> disks)
         {
             col.Item().Element(SectionTitle("Protocolo S.M.A.R.T"));
@@ -108,12 +156,12 @@ namespace WindowsHealth_ServerCheck.Reports
             {
                 table.ColumnsDefinition(c =>
                 {
-                    c.RelativeColumn(3);  // Disco       — más ancho por el nombre
-                    c.RelativeColumn(2);  // Tipo
-                    c.RelativeColumn(2);  // Falla inminente
-                    c.RelativeColumn(2);  // Temperatura
-                    c.RelativeColumn(2);  // Horas de uso
-                    c.RelativeColumn(2);  // Salud del disco
+                    c.RelativeColumn(3);
+                    c.RelativeColumn(2);
+                    c.RelativeColumn(2);
+                    c.RelativeColumn(2);
+                    c.RelativeColumn(2);
+                    c.RelativeColumn(2);
                 });
 
                 table.Header(header =>
@@ -128,81 +176,61 @@ namespace WindowsHealth_ServerCheck.Reports
 
                 foreach (SmartResult disk in disks)
                 {
-                    // Disco
-                    table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                    table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
                         .Text(disk.DiskName).FontSize(9);
-
-                    // Tipo
-                    table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                    table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
                         .Text(disk.InterfaceType ?? "Unknown").FontSize(9);
 
                     // Falla inminente
                     if (!disk.HasSmartData)
-                    {
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
                             .Text(t => t.Span("N/A").FontColor("#95A5A6").FontSize(9));
-                    }
                     else if (!disk.PredictFailureResolved)
-                    {
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
                             .Text(t => t.Span("N/D").FontColor("#95A5A6").FontSize(9));
-                    }
                     else
-                    {
-                        string failText = disk.PredictFailure ? "SÍ" : "No";
-                        string failColor = disk.PredictFailure ? "#E74C3C" : "#27AE60";
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
-                            .Text(t => t.Span(failText).FontColor(failColor).Bold().FontSize(9));
-                    }
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
+                            .Text(t => t.Span(disk.PredictFailure ? "SÍ" : "No")
+                                .FontColor(disk.PredictFailure ? "#E74C3C" : "#27AE60")
+                                .Bold().FontSize(9));
 
                     // Temperatura
                     if (!disk.HasSmartData || disk.Temperature == 0)
-                    {
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
                             .Text(t => t.Span("N/D").FontColor("#95A5A6").FontSize(9));
-                    }
                     else
-                    {
-                        string tempColor = disk.Temperature < 45 ? "#27AE60"
-                                         : disk.Temperature <= 55 ? "#E67E22"
-                                         : "#E74C3C";
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
-                            .Text(t => t.Span($"{disk.Temperature} °C").FontColor(tempColor).FontSize(9));
-                    }
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
+                            .Text(t => t.Span($"{disk.Temperature} °C")
+                                .FontColor(disk.Temperature < 45 ? "#27AE60"
+                                    : disk.Temperature <= 55 ? "#E67E22" : "#E74C3C")
+                                .FontSize(9));
 
                     // Horas de uso
                     if (!disk.HasSmartData || disk.HoursUsed == 0)
-                    {
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
                             .Text(t => t.Span("N/D").FontColor("#95A5A6").FontSize(9));
-                    }
                     else
-                    {
-                        string hoursColor = disk.HoursUsed < 20000 ? "#27AE60"
-                                          : disk.HoursUsed < 40000 ? "#E67E22"
-                                          : "#E74C3C";
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
-                            .Text(t => t.Span($"{disk.HoursUsed} h").FontColor(hoursColor).FontSize(9));
-                    }
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
+                            .Text(t => t.Span($"{disk.HoursUsed} h")
+                                .FontColor(disk.HoursUsed < 20000 ? "#27AE60"
+                                    : disk.HoursUsed < 40000 ? "#E67E22" : "#E74C3C")
+                                .FontSize(9));
 
-                    // Salud del disco
+                    // Salud
                     if (!disk.HasHealthData)
-                    {
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
                             .Text(t => t.Span("N/D").FontColor("#95A5A6").FontSize(9));
-                    }
                     else
-                    {
-                        string healthColor = disk.HealthPercent >= 90 ? "#27AE60"
-                                           : disk.HealthPercent >= 60 ? "#E67E22"
-                                           : "#E74C3C";
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
-                            .Text(t => t.Span($"{disk.HealthPercent}%").FontColor(healthColor).FontSize(9));
-                    }
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
+                            .Text(t => t.Span($"{disk.HealthPercent}%")
+                                .FontColor(disk.HealthPercent >= 90 ? "#27AE60"
+                                    : disk.HealthPercent >= 60 ? "#E67E22" : "#E74C3C")
+                                .FontSize(9));
                 }
             });
         }
 
+        // Windows Update
         private static void ComposeUpdatesSection(ColumnDescriptor col, UpdateResult updates)
         {
             col.Item().Element(SectionTitle("Windows Update"));
@@ -214,21 +242,35 @@ namespace WindowsHealth_ServerCheck.Reports
                     header.Cell().Element(HeaderCell).Text("Concepto");
                     header.Cell().Element(HeaderCell).Text("Resultado");
                 });
+                AddRow(table, "Modo de ejecución",
+                    updates.IsQueryOnly ? "Consulta (sin instalación)" : "Instalación");
                 AddRow(table, "Actualizaciones encontradas", updates.UpdatesFound.ToString());
-                AddRow(table, "Actualizaciones instaladas", updates.UpdatesInstalled.ToString());
-                AddRow(table, "Estado", updates.Success ? "Correcto" : "Con errores",
-                    updates.Success ? "#27AE60" : "#E74C3C");
+
+                if (!updates.IsQueryOnly)
+                {
+                    AddRow(table, "Actualizaciones instaladas", updates.UpdatesInstalled.ToString());
+                    AddRow(table, "Estado",
+                        updates.Success ? "Correcto" : "Con errores",
+                        updates.Success ? "#27AE60" : "#E74C3C");
+                }
+
                 AddRow(table, "Fecha de ejecución", updates.Date.ToString("dd/MM/yyyy HH:mm:ss"));
             });
 
             if (updates.UpdateTitles?.Count > 0)
             {
-                col.Item().PaddingTop(8).Text("Actualizaciones instaladas:").Bold();
+                // La etiqueta cambia según si se instalaron o solo se detectaron
+                string listTitle = updates.IsQueryOnly
+                    ? "Actualizaciones disponibles (pendientes de instalar):"
+                    : "Actualizaciones instaladas:";
+
+                col.Item().PaddingTop(8).Text(listTitle).Bold();
                 foreach (string title in updates.UpdateTitles)
                     col.Item().PaddingLeft(10).Text($"• {title}").FontSize(9);
             }
         }
 
+        // Drivers
         private static void ComposeDriversSection(ColumnDescriptor col, DriversResult drivers)
         {
             col.Item().Element(SectionTitle("Escaneo de Drivers"));
@@ -266,39 +308,47 @@ namespace WindowsHealth_ServerCheck.Reports
                     });
                     foreach (DriverInfo d in outdated)
                     {
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
                             .Text(text => text.Span(d.DeviceName).FontColor("#E74C3C").Bold());
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5).Text(d.DriverVersion);
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5).Text(d.DriverDate);
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5).Text(d.DriverVersion);
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5).Text(d.DriverDate);
                     }
                 });
             }
         }
 
+        // DF-Server
         private static void ComposeDfServerSection(ColumnDescriptor col, DfServerData df)
         {
-            col.Item().Element(SectionTitle("Datos DfServer"));
+            col.Item().Element(SectionTitleDf("Datos DF-Server"));
 
-            // Digitalización Certificada
             col.Item().PaddingTop(6).Text("Digitalización certificada").Bold();
             col.Item().Table(table =>
             {
                 table.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); });
-                table.Header(h => { h.Cell().Element(HeaderCell).Text("Concepto"); h.Cell().Element(HeaderCell).Text("Estado"); });
-                AddRow(table, "Tiene digitalización certificada", df.HasCertifiedDigitization ? "Sí" : "No");
+                table.Header(h =>
+                {
+                    h.Cell().Element(HeaderCellDf).Text("Concepto");
+                    h.Cell().Element(HeaderCellDf).Text("Estado");
+                });
+                AddRow(table, "Tiene digitalización certificada",
+                    df.HasCertifiedDigitization ? "Sí" : "No");
                 if (df.HasCertifiedDigitization)
                     AddRow(table, "Configurada correctamente",
                         df.HasConfigureDigitization ? "Sí" : "No",
                         df.HasConfigureDigitization ? "#27AE60" : "#E74C3C");
             });
 
-            // DfSignature
-            col.Item().PaddingTop(10).Text("DfSignature").Bold();
+            col.Item().PaddingTop(10).Text("DF-Signature").Bold();
             col.Item().Table(table =>
             {
                 table.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); });
-                table.Header(h => { h.Cell().Element(HeaderCell).Text("Concepto"); h.Cell().Element(HeaderCell).Text("Estado"); });
-                AddRow(table, "Tiene firmas DfSignature", df.HasDfSignature ? "Sí" : "No");
+                table.Header(h =>
+                {
+                    h.Cell().Element(HeaderCellDf).Text("Concepto");
+                    h.Cell().Element(HeaderCellDf).Text("Estado");
+                });
+                AddRow(table, "Tiene firmas DF-Signature", df.HasDfSignature ? "Sí" : "No");
                 if (df.HasDfSignature)
                 {
                     AddRow(table, "Número de firmas", df.DfSignatureCount.ToString());
@@ -309,12 +359,15 @@ namespace WindowsHealth_ServerCheck.Reports
                 }
             });
 
-            // Certificados digitales
             col.Item().PaddingTop(10).Text("Certificados digitales").Bold();
             col.Item().Table(table =>
             {
                 table.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); });
-                table.Header(h => { h.Cell().Element(HeaderCell).Text("Concepto"); h.Cell().Element(HeaderCell).Text("Estado"); });
+                table.Header(h =>
+                {
+                    h.Cell().Element(HeaderCellDf).Text("Concepto");
+                    h.Cell().Element(HeaderCellDf).Text("Estado");
+                });
                 AddRow(table, "Tiene certificados digitales", df.HasCertificates ? "Sí" : "No");
                 if (df.HasCertificates)
                     AddRow(table, "Número de certificados", df.Certificate.Count.ToString());
@@ -333,10 +386,10 @@ namespace WindowsHealth_ServerCheck.Reports
                     });
                     table.Header(h =>
                     {
-                        h.Cell().Element(HeaderCell).Text("Certificado");
-                        h.Cell().Element(HeaderCell).Text("Caducidad");
-                        h.Cell().Element(HeaderCell).Text("Estado");
-                        h.Cell().Element(HeaderCell).Text("Cliente avisado");
+                        h.Cell().Element(HeaderCellDf).Text("Certificado");
+                        h.Cell().Element(HeaderCellDf).Text("Caducidad");
+                        h.Cell().Element(HeaderCellDf).Text("Estado");
+                        h.Cell().Element(HeaderCellDf).Text("Cliente avisado");
                     });
 
                     foreach (CertificateInfo cert in df.Certificate)
@@ -354,39 +407,53 @@ namespace WindowsHealth_ServerCheck.Reports
                             _ => "Vigente",
                         };
 
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5).Text(cert.Name);
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5).Text(cert.Name);
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
                             .Text(cert.ExpirationDate.ToString("dd/MM/yyyy"));
-                        table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                        table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
                             .Text(t => t.Span(estadoText).FontColor(estadoColor).Bold());
 
-                        // "Cliente avisado" solo aplica a caducados/próximos
                         if (cert.Status != CertificateStatus.Valid)
-                            table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                            table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
                                 .Text(t => t.Span(cert.ClientNotificade ? "Sí" : "No")
                                     .FontColor(cert.ClientNotificade ? "#27AE60" : "#E74C3C").Bold());
                         else
-                            table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5).Text("—");
+                            table.Cell().Border(1).BorderColor(ColorBorder).Padding(5).Text("—");
                     }
                 });
             }
         }
 
+        // Helpers de estilo
+
         private static Action<IContainer> SectionTitle(string title) => container =>
-            container.Background("#2C3E50").Padding(8).Text(title)
+            container.Background(ColorPrimary).Padding(8).Text(title)
+                .FontSize(12).Bold().FontColor("#FFFFFF");
+
+        private static Action<IContainer> SectionTitleDf(string title) => container =>
+            container.Background(ColorDfServer).Padding(8).Text(title)
                 .FontSize(12).Bold().FontColor("#FFFFFF");
 
         private static IContainer HeaderCell(IContainer container) =>
-            container.Background("#BDC3C7").Padding(6).Border(1).BorderColor("#95A5A6");
+            container.Background(ColorHeaderBg)
+            .PaddingVertical(8)
+             .PaddingHorizontal(5)
+            .BorderColor("#95A5A6");
+
+        private static IContainer HeaderCellDf(IContainer container) =>
+            container.Background("#FDE8C0")
+            .PaddingVertical(8)
+            .PaddingHorizontal(5)
+            .BorderColor("#E8A020");
 
         private static void AddRow(TableDescriptor table, string label, string value, string hexColor = null)
         {
-            table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5).Text(label);
+            table.Cell().Border(1).BorderColor(ColorBorder).Padding(5).Text(label);
             if (hexColor != null)
-                table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5)
+                table.Cell().Border(1).BorderColor(ColorBorder).Padding(5)
                     .Text(text => text.Span(value).FontColor(hexColor).Bold());
             else
-                table.Cell().Border(1).BorderColor("#BDC3C7").Padding(5).Text(value);
+                table.Cell().Border(1).BorderColor(ColorBorder).Padding(5).Text(value);
         }
     }
 }
