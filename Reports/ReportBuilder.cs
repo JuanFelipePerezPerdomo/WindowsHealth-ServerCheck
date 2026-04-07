@@ -14,7 +14,7 @@ namespace WindowsHealth_ServerCheck.Reports
         private const string ColorBorder = "#BDC3C7";
         private const string ColorHeaderBg = "#D0D5E8";
 
-        public static void Generate(AuditResult audit)
+        public static void Generate(AuditResult audit, bool includesUpdate = true)
         {
             using SaveFileDialog dialog = new();
             dialog.Title = "Guardar Informe";
@@ -52,14 +52,12 @@ namespace WindowsHealth_ServerCheck.Reports
                     // Fondo de página (watermark) 
                     // Se dibuja DEBAJO de todo el contenido. La imagen debe
                     // tener transparencia para no tapar el texto.
-
                     page.Background()
                         .AlignCenter()
                         .AlignMiddle()
                         .Width(380)
                         .Image(watermarkBytes)
                         .FitWidth();
-
 
                     page.Header().Element(c => ComposeHeader(c, audit));
 
@@ -74,7 +72,7 @@ namespace WindowsHealth_ServerCheck.Reports
                             ComposeSmartSection(col, audit.Disks);
 
                         if (audit.UpdatesExecuted && audit.Updates != null)
-                            ComposeUpdatesSection(col, audit.Updates);
+                            ComposeUpdatesSection(col, audit.Updates, includesUpdate);
 
                         if (audit.DriversExecuted && audit.Drivers != null)
                             ComposeDriversSection(col, audit.Drivers);
@@ -143,7 +141,6 @@ namespace WindowsHealth_ServerCheck.Reports
                 AddRow(table, "Archivos eliminados", cleanUp.DeleteFiles.ToString());
                 AddRow(table, "Carpetas eliminadas", cleanUp.DeleteDirs.ToString());
                 AddRow(table, "Espacio liberado", FormatBytesHelper.FormatBytes(cleanUp.FreedBytes));
-                AddRow(table, "Fecha de ejecución", cleanUp.Date.ToString("dd/MM/yyyy HH:mm:ss"));
             });
         }
 
@@ -231,7 +228,7 @@ namespace WindowsHealth_ServerCheck.Reports
         }
 
         // Windows Update
-        private static void ComposeUpdatesSection(ColumnDescriptor col, UpdateResult updates)
+        private static void ComposeUpdatesSection(ColumnDescriptor col, UpdateResult updates, bool includesUpdate)
         {
             col.Item().Element(SectionTitle("Windows Update"));
             col.Item().Table(table =>
@@ -243,7 +240,7 @@ namespace WindowsHealth_ServerCheck.Reports
                     header.Cell().Element(HeaderCell).Text("Resultado");
                 });
                 AddRow(table, "Modo de ejecución",
-                    updates.IsQueryOnly ? "Consulta (sin instalación)" : "Instalación");
+                    updates.IsQueryOnly ? "Consulta" : "Instalación");
                 AddRow(table, "Actualizaciones encontradas", updates.UpdatesFound.ToString());
 
                 if (!updates.IsQueryOnly)
@@ -253,11 +250,10 @@ namespace WindowsHealth_ServerCheck.Reports
                         updates.Success ? "Correcto" : "Con errores",
                         updates.Success ? "#27AE60" : "#E74C3C");
                 }
-
-                AddRow(table, "Fecha de ejecución", updates.Date.ToString("dd/MM/yyyy HH:mm:ss"));
             });
 
-            if (updates.UpdateTitles?.Count > 0)
+            // añadimos includesUpdate para que oculte esta seccion o no dependiendo de la respuesta del tecnico
+            if (includesUpdate && updates.UpdateTitles?.Count > 0)
             {
                 // La etiqueta cambia según si se instalaron o solo se detectaron
                 string listTitle = updates.IsQueryOnly
@@ -285,7 +281,6 @@ namespace WindowsHealth_ServerCheck.Reports
                 AddRow(table, "Drivers escaneados", drivers.TotalDrivers.ToString());
                 AddRow(table, "Drivers desactualizados", drivers.OutdatedDrivers.ToString(),
                     drivers.OutdatedDrivers > 0 ? "#E74C3C" : "#27AE60");
-                AddRow(table, "Fecha de ejecución", drivers.Date.ToString("dd/MM/yyyy HH:mm:ss"));
             });
 
             var outdated = drivers.Drivers.FindAll(d => d.IsOutdated);

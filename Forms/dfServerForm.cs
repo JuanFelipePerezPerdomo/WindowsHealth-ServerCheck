@@ -9,7 +9,8 @@ namespace WindowsHealth_ServerCheck.Forms
         private readonly List<(TextBox txtName, DateTimePicker dtp, CheckBox chkNotified, Label labStatus)> _certRows
             = new List<(TextBox, DateTimePicker, CheckBox, Label)>();
 
-        private const int CertRowHeight = 38;
+        // Altura base de fila a 96 DPI — se escala en tiempo de ejecución
+        private const int CertRowHeightBase = 38;
 
         // Panel interno sin scroll que crece con las filas.
         // pnl_certRows (externo, AutoScroll=true) actúa solo como ventana.
@@ -17,13 +18,22 @@ namespace WindowsHealth_ServerCheck.Forms
         // de coordenadas y las filas nuevas aparecen fuera del área visible.
         private Panel _innerPanel;
 
+        // Factor de escala calculado una vez al construir el form
+        // = DPI actual / DPI base (96). Ej: 125% → 1.30f, 150% → 1.56f
+        private float _dpiScale = 1f;
+
         public dfServerForm()
         {
             InitializeComponent();
+            // Calculamos el factor de escala real del dispositivo
+            _dpiScale = DeviceDpi / 96f;
             BuildInnerPanel();
             WireEvents();
             RefreshSectionVisibility();
         }
+
+        // Escala un valor base de píxeles al DPI actual
+        private int S(int basePixels) => (int)Math.Round(basePixels * _dpiScale);
 
         // Crea el panel interno y lo añade a pnl_certRows
         private void BuildInnerPanel()
@@ -62,7 +72,7 @@ namespace WindowsHealth_ServerCheck.Forms
             btn_cancel.Click += btn_cancel_Click;
         }
 
-        // Visibilidad de secciones 
+        // Visibilidad de secciones
         private void RefreshSectionVisibility()
         {
             pnl_digitization.Visible = rad_digYes.Checked;
@@ -86,13 +96,15 @@ namespace WindowsHealth_ServerCheck.Forms
             _innerPanel.Controls.Clear();
             _certRows.Clear();
 
+            int rowHeight = S(CertRowHeightBase);
             int count = (int)nud_certsNum.Value;
+
             for (int i = 0; i < count; i++)
-                AddCertRow(i + 1, i * CertRowHeight);
+                AddCertRow(i + 1, i * rowHeight);
 
             // Ajustar la altura del inner panel al contenido total
             // AutoScroll del panel externo detecta esto y muestra el scroll si hace falta
-            _innerPanel.Height = count * CertRowHeight;
+            _innerPanel.Height = count * rowHeight;
 
             // Forzar scroll al inicio al reconstruir
             pnl_certRows.AutoScrollPosition = new Point(0, 0);
@@ -100,70 +112,79 @@ namespace WindowsHealth_ServerCheck.Forms
 
         private void AddCertRow(int index, int top)
         {
+            int rowH = S(CertRowHeightBase) - 2;
+            int ctrlTop = Math.Max(2, (rowH - S(23)) / 2);   // centrado vertical de inputs
+            int labTop = Math.Max(2, (rowH - S(20)) / 2);   // centrado vertical de labels
+
             Panel row = new Panel
             {
                 Left = 0,
                 Top = top,
                 Width = _innerPanel.Width,
-                Height = CertRowHeight - 2,
+                Height = rowH,
                 BackColor = index % 2 == 0
                     ? Color.WhiteSmoke
                     : Color.Transparent,
             };
 
-            int x = 4;
+            int x = S(4);
 
+            // Índice
             Label labIdx = new Label
             {
                 Text = $"{index}.",
                 Left = x,
-                Top = 8,
-                Width = 22,
-                Height = 20,
+                Top = labTop,
+                Width = S(22),
+                Height = S(20),
                 TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
                 ForeColor = System.Drawing.SystemColors.GrayText,
             };
-            x += 26;
+            x += S(26);
 
+            // Nombre del certificado
             TextBox txt = new TextBox
             {
                 Left = x,
-                Top = 6,
-                Width = 160,
-                Height = 23,
+                Top = ctrlTop,
+                Width = S(160),
+                Height = S(23),
                 PlaceholderText = "Nombre del certificado",
             };
-            x += 165;
+            x += S(165);
 
+            // Fecha de caducidad
             DateTimePicker dtp = new DateTimePicker
             {
                 Left = x,
-                Top = 6,
-                Width = 110,
-                Height = 23,
+                Top = ctrlTop,
+                Width = S(110),
+                Height = S(23),
                 Format = DateTimePickerFormat.Short,
                 Value = DateTime.Today.AddYears(1),
             };
-            x += 115;
+            x += S(115);
 
+            // Estado — ancho generoso para que "Caduca pronto" quepa a cualquier DPI
             Label labStatus = new Label
             {
                 Left = x,
-                Top = 8,
-                Width = 88,
-                Height = 20,
+                Top = labTop,
+                Width = S(100),
+                Height = S(20),
                 TextAlign = System.Drawing.ContentAlignment.MiddleLeft,
                 Font = new System.Drawing.Font("Segoe UI", 9f, System.Drawing.FontStyle.Bold),
             };
-            x += 93;
+            x += S(105);
 
+            // Checkbox avisado — ancho suficiente para texto + caja a cualquier escala
             CheckBox chk = new CheckBox
             {
                 Text = "Avisado",
                 Left = x,
-                Top = 8,
-                Width = 85,
-                Height = 20,
+                Top = labTop,
+                Width = S(90),
+                Height = S(20),
                 Visible = false,
             };
 

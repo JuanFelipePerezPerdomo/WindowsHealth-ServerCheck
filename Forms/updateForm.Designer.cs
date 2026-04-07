@@ -59,6 +59,7 @@
             Controls.Add(txt_Logs);
             Controls.Add(pb_Process);
             Cursor = Cursors.AppStarting;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             Margin = new Padding(4, 3, 4, 3);
             MaximizeBox = false;
             MinimizeBox = false;

@@ -378,6 +378,7 @@
             // 
             // btn_viewAllDisk
             // 
+            btn_viewAllDisk.Cursor = Cursors.Hand;
             btn_viewAllDisk.Enabled = false;
             btn_viewAllDisk.Location = new Point(368, 73);
             btn_viewAllDisk.Margin = new Padding(4, 3, 4, 3);
@@ -502,6 +503,8 @@
             // 
             // comB_diskName
             // 
+            comB_diskName.Cursor = Cursors.Hand;
+            comB_diskName.DropDownStyle = ComboBoxStyle.DropDownList;
             comB_diskName.FormattingEnabled = true;
             comB_diskName.Location = new Point(10, 24);
             comB_diskName.Margin = new Padding(4, 3, 4, 3);

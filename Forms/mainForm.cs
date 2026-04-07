@@ -217,7 +217,6 @@ namespace WindowsHealth_ServerCheck.Forms
                 HistoryLogger.Save(header, log);
 
                 btn_startDriverComp.Enabled = true;
-
             }
         }
 
@@ -240,7 +239,8 @@ namespace WindowsHealth_ServerCheck.Forms
             {
                 if (!ShowDfServerForm()) return;
             }
-            ReportBuilder.Generate(_auditResult);
+            bool includesUpdates = AskIncludeUpdates(_auditResult);
+            ReportBuilder.Generate(_auditResult, includesUpdates);
         }
 
         private async void btn_startEveryone_Click(object sender, EventArgs e)
@@ -292,7 +292,6 @@ namespace WindowsHealth_ServerCheck.Forms
             _auditResult.DfServerExecuted = savedDfServerExec;
 
             // Actualizar UI
-
             //  Cleanup
             lab_deleteFiles.Text = audit.CleanUp.DeleteFiles.ToString();
             lab_deleteDirs.Text = audit.CleanUp.DeleteDirs.ToString();
@@ -364,9 +363,9 @@ namespace WindowsHealth_ServerCheck.Forms
             else
             {
                 _auditResult.Date = DateTime.Now;
-                ReportBuilder.Generate(_auditResult);
+                bool includeUpdates = AskIncludeUpdates(_auditResult);
+                ReportBuilder.Generate(_auditResult, includeUpdates);
             }
-
             // Rehabilitar controles 
             btn_startEveryone.Enabled = true;
             btn_startDriverComp.Enabled = true;
@@ -559,7 +558,6 @@ namespace WindowsHealth_ServerCheck.Forms
                 txt_healtInformation.AppendText(line + Environment.NewLine);
         }
 
-
         // Validar si hay un tecnico seleccionado
         public bool AssignTechnicianAndGenerate()
         {
@@ -582,5 +580,28 @@ namespace WindowsHealth_ServerCheck.Forms
             return true;
         }
 
+        // Pregunta al técnico si desea incluir la sección de actualizaciones en el informe.
+        // Solo se pregunta si el módulo fue ejecutado; si no, devuelve false directamente.
+        private bool AskIncludeUpdates(AuditResult audit)
+        {
+            if (!audit.UpdatesExecuted || audit.Updates == null)
+                return false;
+
+            string mode = audit.Updates.IsQueryOnly
+                ? "Solo Consulta (sin instalación)"
+                : "Instalacion";
+
+            DialogResult dr = MessageBox.Show(
+                $"El modulo se ejecuto en modo {mode}.\n\n" +
+                "¿Deseas incluir esta informacion en el informe?\n\n" +
+                "Selecciona 'NO' si no quieres que el cliente vea los datos de actualizaciones, " +
+                "o si planeas instalar las actualizaciones después de generar el informe.",
+                "Incluir actualizaciones en el informe",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+
+            return dr == DialogResult.Yes;
+        }
     }
 }

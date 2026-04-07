@@ -36,7 +36,10 @@
             AutoScaleMode = AutoScaleMode.Dpi;
             BackColor = Color.MintCream;
             ClientSize = new Size(800, 450);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
             Name = "viewDiskForm";
+            ShowIcon = false;
             Text = "viewDiskForm";
             ResumeLayout(false);
         }
