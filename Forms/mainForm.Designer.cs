@@ -197,7 +197,7 @@
             // 
             // panel1
             // 
-            panel1.BackColor = Color.MintCream;
+            panel1.BackColor = Color.Honeydew;
             panel1.BorderStyle = BorderStyle.Fixed3D;
             panel1.Controls.Add(chkBox_EnableSystemUpdate);
             panel1.Controls.Add(btn_startDriverComp);
@@ -778,6 +778,7 @@
             // 
             // btn_openDeviceManager
             // 
+            btn_openDeviceManager.BackColor = SystemColors.HighlightText;
             btn_openDeviceManager.Cursor = Cursors.Hand;
             btn_openDeviceManager.Location = new Point(16, 108);
             btn_openDeviceManager.Margin = new Padding(4, 3, 4, 3);
@@ -785,7 +786,7 @@
             btn_openDeviceManager.Size = new Size(227, 46);
             btn_openDeviceManager.TabIndex = 2;
             btn_openDeviceManager.Text = "Abrir Administrador de Dispositivo";
-            btn_openDeviceManager.UseVisualStyleBackColor = true;
+            btn_openDeviceManager.UseVisualStyleBackColor = false;
             btn_openDeviceManager.Click += btn_openDeviceManager_Click;
             // 
             // btn_temp_diagnostic
@@ -845,7 +846,7 @@
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
-            BackColor = Color.MintCream;
+            BackColor = Color.Honeydew;
             BackgroundImageLayout = ImageLayout.None;
             ClientSize = new Size(924, 648);
             Controls.Add(comB_techicianName);

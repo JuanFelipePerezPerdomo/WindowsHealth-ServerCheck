@@ -10,7 +10,20 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	<ApplicationIcon>Resources\Icon\copican_logo.ico</ApplicationIcon>
+	<Platforms>x64</Platforms>
+	 <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Modules\Native\HardwareIdScanner.dll" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Modules\Native\HardwareIdScanner.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<Link>HardwareIdScanner.dll</Link>
+		</Content>
+	</ItemGroup>
 
   <ItemGroup>
     <COMReference Include="WUApiLib">

@@ -1,5 +1,8 @@
-﻿using System.Management;
+﻿// Modules/DriverScanner.cs
+
+using System.Management;
 using WindowsHealth_ServerCheck.Helpers;
+using WindowsHealth_ServerCheck.Interop;
 using WindowsHealth_ServerCheck.Models;
 using WUApiLib;
 
@@ -7,16 +10,9 @@ namespace WindowsHealth_ServerCheck.Modules
 {
     public class DriverScanner
     {
-        // Fecha de referencia para drivers genéricos de Microsoft,
-        // aunque el driver este actualizado su fecha siempre sera estatica por lo que puede dar problemas
-        // a la hora de comparar, por lo que se usara como referencia para no marcar drivers
-        // genéricos como desactualizados
         private static readonly string GenericWindowsDriverDate = "21/06/2006";
 
-        // Lista de fabricantes genéricos que suelen tener drivers con fechas antiguas
-        // pero que no necesariamente indican que el driver este desactualizado
-        private static readonly HashSet<string> GenericManufacturers = new HashSet<string>(
-            StringComparer.OrdinalIgnoreCase)
+        private static readonly HashSet<string> GenericManufacturers = new(StringComparer.OrdinalIgnoreCase)
         {
             "Microsoft",
             "(Standard system devices)",
@@ -31,58 +27,85 @@ namespace WindowsHealth_ServerCheck.Modules
             "(Standard IDE ATA/ATAPI controllers)",
         };
 
-        public static (List<string> log, DriversResult result) Scan() 
+        public static (List<string> log, DriversResult result) Scan()
         {
-            List<string> log = new List<string>();
-            DriversResult result = new DriversResult { Date = DateTime.Now };
-            try    
-            {
-                log.Add("Consultando Actualizaciones Pendientes...");
+            List<string> log = new();
+            DriversResult result = new() { Date = DateTime.Now };
 
-                HashSet<string> pendingUpdateTitles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                Dictionary<string, string> pendingUpdateMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                // ── 1. Actualizaciones pendientes — extraer HardwareID real del objeto ──
+                log.Add("Consultando actualizaciones de driver pendientes...");
+
+                // Clave: HardwareId del dispositivo → título del update
+                // IUpdate expone IWindowsDriverUpdate que tiene DriverHardwareID
+                var pendingByHardwareId = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
                 try
                 {
-                    UpdateSession updateSession = new UpdateSession();
-                    IUpdateSearcher updateSearcher = updateSession.CreateUpdateSearcher();
-                    ISearchResult searchResult = updateSearcher.Search("IsInstalled=0 AND Type='Driver'");
+                    UpdateSession updateSession = new();
+                    IUpdateSearcher searcher = updateSession.CreateUpdateSearcher();
+                    ISearchResult searchResult = searcher.Search("IsInstalled=0 AND Type='Driver'");
 
                     foreach (IUpdate update in searchResult.Updates)
                     {
-                        pendingUpdateTitles.Add(update.Title);
-                        foreach (string word in update.Title.Split(' '))
+                        // Castear a IWindowsDriverUpdate para acceder al HardwareID real
+                        if (update is IWindowsDriverUpdate driverUpdate)
                         {
-                            string key = word.Trim().ToLowerInvariant();
-                            if (key.Length > 4 && !pendingUpdateMap.ContainsKey(key))
+                            string hwid = driverUpdate.DriverHardwareID ?? string.Empty;
+                            if (!string.IsNullOrWhiteSpace(hwid) && !pendingByHardwareId.ContainsKey(hwid))
                             {
-                                pendingUpdateMap[key] = update.Title;
+                                pendingByHardwareId[hwid] = update.Title;
+                                log.Add($"  [WU] HardwareID encontrado: {hwid}");
                             }
                         }
-                        log.Add($"Actualizaciones de driver pendientes encontradas: {pendingUpdateTitles.Count}");
                     }
-                } catch (Exception ex) 
+
+                    log.Add($"Actualizaciones pendientes: {searchResult.Updates.Count}");
+                    log.Add($"Con Hardware ID real extraído: {pendingByHardwareId.Count}");
+                }
+                catch (Exception ex)
                 {
                     log.Add($"[AVISO] No se pudo consultar Windows Update: {ex.Message}");
-                    log.Add("El escaneo continuará solo con datos WMI.");
                 }
 
-                log.Add("Consultando drivers instalados...");
+                // ── 2. Dispositivos con Hardware IDs via DLL nativa ──────────────
+                log.Add("Enumerando dispositivos con Hardware IDs via SetupAPI...");
 
-                var drives = WmiHelper.Query(@"root\CIMV2", 
+                // Mapa: InstanceId (DeviceID de WMI) → DeviceRecord completo
+                var devicesByInstanceId = new Dictionary<string, DeviceRecord>(StringComparer.OrdinalIgnoreCase);
+
+                try
+                {
+                    var allDevices = HardwareIdScanner.GetAllDevices();
+                    foreach (var dev in allDevices)
+                        if (!string.IsNullOrWhiteSpace(dev.InstanceId))
+                            devicesByInstanceId[dev.InstanceId] = dev;
+
+                    log.Add($"Dispositivos enumerados: {devicesByInstanceId.Count}");
+                }
+                catch (Exception ex)
+                {
+                    log.Add($"[AVISO] Error al cargar HardwareIdScanner.dll: {ex.Message}");
+                }
+
+                // ── 3. Drivers WMI — cruce por Hardware ID exacto ───────────────
+                log.Add("Consultando drivers instalados (WMI)...");
+
+                var wmiDrivers = WmiHelper.Query(@"root\CIMV2",
                     "SELECT * FROM Win32_PnPSignedDriver WHERE DeviceName IS NOT NULL");
 
-                foreach (ManagementBaseObject drive in drives)
+                foreach (ManagementBaseObject drive in wmiDrivers)
                 {
                     string deviceName = drive["DeviceName"]?.ToString() ?? "Unknown Device";
                     string driverVersion = drive["DriverVersion"]?.ToString() ?? "Unknown Version";
                     string driverDate = drive["DriverDate"]?.ToString() ?? "Unknown Date";
                     string manufacturer = drive["Manufacturer"]?.ToString() ?? "Unknown Manufacturer";
+                    string pnpDeviceId = drive["DeviceID"]?.ToString() ?? string.Empty;
 
-                    // Parsear la fecha a un formato legible
                     string driverDateReadable = WmiHelper.ParseWmiDate(driverDate);
 
-                    DriverInfo info = new DriverInfo
+                    DriverInfo info = new()
                     {
                         DeviceName = deviceName,
                         DriverVersion = driverVersion,
@@ -92,19 +115,36 @@ namespace WindowsHealth_ServerCheck.Modules
                         UpdatedTitle = string.Empty
                     };
 
-                    if(IsGenericDriver(manufacturer, driverDateReadable))
+                    // Drivers genéricos → nunca desactualizado
+                    if (IsGenericDriver(manufacturer, driverDateReadable))
                     {
                         log.Add($"[GENÉRICO] {deviceName} — v{driverVersion} ({driverDateReadable})");
                         result.Drivers.Add(info);
                         result.TotalDrivers++;
-                        continue; // no marcara como desactualizado aunque tenga una fecha antigua al ser un driver genérico de Microsoft
+                        continue;
                     }
 
-                    /* Para cruzar esta informacion con las actualizacion pendientes lo que haremos
-                     sera que buscaremos una palabra clave del nombre del dispositivo que aparece como
-                     clave del map de actualizaciones pendientes
-                    */
-                    string matchedTitle = FindMatchingUpdate(deviceName, pendingUpdateMap);
+                    // Buscar los Hardware IDs reales del dispositivo via SetupAPI
+                    string? matchedTitle = null;
+
+                    if (devicesByInstanceId.TryGetValue(pnpDeviceId, out DeviceRecord rec)
+                        && rec.HardwareIds != null
+                        && pendingByHardwareId.Count > 0)
+                    {
+                        for (int i = 0; i < rec.HardwareIdCount && i < rec.HardwareIds.Length; i++)
+                        {
+                            string hwid = rec.HardwareIds[i].HardwareId ?? string.Empty;
+                            if (string.IsNullOrWhiteSpace(hwid)) continue;
+
+                            if (pendingByHardwareId.TryGetValue(hwid, out string? title))
+                            {
+                                matchedTitle = title;
+                                break; // match exacto encontrado, detener
+                            }
+                        }
+                    }
+
+                    // SIN fallback por keyword — solo match exacto por Hardware ID
                     if (matchedTitle != null)
                     {
                         info.IsOutdated = true;
@@ -125,42 +165,21 @@ namespace WindowsHealth_ServerCheck.Modules
                 log.Add("--------");
                 log.Add($"Drivers escaneados: {result.TotalDrivers}");
                 log.Add($"Drivers desactualizados: {result.OutdatedDrivers}");
-                log.Add("Escaneo de drivers completado.");
-            } catch (Exception ex)
+                log.Add("Escaneo completado.");
+            }
+            catch (Exception ex)
             {
                 log.Add("Error crítico en DriverScanner: " + ex.Message);
             }
+
             return (log, result);
         }
-        // Busca si alguna palabra significativa del deviceName tiene coincidencia
-        // en el mapa de títulos de actualizaciones pendientes
-        private static string? FindMatchingUpdate(string deviceName, Dictionary<string, string> updateMap)
-        {
-            if (updateMap.Count == 0) return null;
 
-            foreach (string word in deviceName.Split(' '))
-            {
-                string key = word.Trim().ToLowerInvariant();
-                if (key.Length > 4 && updateMap.TryGetValue(key, out string title))
-                    return title;
-            }
-            return null;
-        }
-
-        // Método para determinar si un driver es genérico basado en el fabricante y la fecha del driver
         private static bool IsGenericDriver(string manufacturer, string driverDateReadable)
         {
-            if (driverDateReadable != GenericWindowsDriverDate)
-                return false;
-
-            // coincidencia exacta con fabricantes genéricos conocidos
-            if (GenericManufacturers.Contains(manufacturer))
-                return true;
-
-            // También se puede hacer una comprobación más flexible para fabricantes genéricos
-            if (manufacturer.StartsWith("(Standard", StringComparison.OrdinalIgnoreCase))
-                return true;
-
+            if (driverDateReadable != GenericWindowsDriverDate) return false;
+            if (GenericManufacturers.Contains(manufacturer)) return true;
+            if (manufacturer.StartsWith("(Standard", StringComparison.OrdinalIgnoreCase)) return true;
             return false;
         }
     }

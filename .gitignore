@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Artefactos de compilación nativa (HardwareIdScanner)
+Modules/Native/HardwareIdScanner.lib
+Modules/Native/HardwareIdScanner.exp
+Modules/Native/HardwareIdScanner.obj
