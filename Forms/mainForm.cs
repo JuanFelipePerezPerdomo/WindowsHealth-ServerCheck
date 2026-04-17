@@ -12,6 +12,7 @@ namespace WindowsHealth_ServerCheck.Forms
     {
         private AuditResult _auditResult = new();
 
+        private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         public mainForm()
         {
             InitializeComponent();
@@ -220,7 +221,7 @@ namespace WindowsHealth_ServerCheck.Forms
             }
         }
 
-        private void btn_GenerateAudit_Click(object sender, EventArgs e)
+        private async void btn_GenerateAudit_ClickAsync(object sender, EventArgs e)
         {
             _auditResult.Date = DateTime.Now;
 
@@ -239,6 +240,11 @@ namespace WindowsHealth_ServerCheck.Forms
             {
                 if (!ShowDfServerForm()) return;
             }
+            var otherData = new OtherData();
+            var dfData = _auditResult.DfServer ?? new DfServerData();
+            TelemetryServices.FetchData(dfData, otherData);
+            await TelemetryServices.FetchJavaVersion(otherData, _http);
+            _auditResult.Telemetry = otherData;
             bool includesUpdates = AskIncludeUpdates(_auditResult);
             ReportBuilder.Generate(_auditResult, includesUpdates);
         }
@@ -293,13 +299,13 @@ namespace WindowsHealth_ServerCheck.Forms
 
             // Actualizar UI
             //  Cleanup
-            lab_deleteFiles.Text = audit.CleanUp.DeleteFiles.ToString();
-            lab_deleteDirs.Text = audit.CleanUp.DeleteDirs.ToString();
-            lab_totalSize.Text = FormatBytesHelper.FormatBytes(audit.CleanUp.FreedBytes);
+            lab_deleteFiles.Text = _auditResult.CleanUp.DeleteFiles.ToString();
+            lab_deleteDirs.Text = _auditResult.CleanUp.DeleteDirs.ToString();
+            lab_totalSize.Text = FormatBytesHelper.FormatBytes(_auditResult.CleanUp.FreedBytes);
 
             // SMART
             comB_diskName.Items.Clear();
-            foreach (SmartResult disk in audit.Disks)
+            foreach (SmartResult disk in _auditResult.Disks)
                 comB_diskName.Items.Add($"{disk.DiskName}  [{disk.InterfaceType ?? "Unknown"}]");
             if (comB_diskName.Items.Count > 0)
                 comB_diskName.SelectedIndex = 0;
@@ -307,9 +313,9 @@ namespace WindowsHealth_ServerCheck.Forms
             btn_viewAllDisk.Enabled = true;
 
             //  Drivers
-            lab_TotalDriversScan.Text = audit.Drivers.TotalDrivers.ToString();
-            lab_driverNotUpdated.Text = audit.Drivers.OutdatedDrivers.ToString();
-            lab_driverNotUpdated.ForeColor = audit.Drivers.OutdatedDrivers > 0 ? Color.Red : Color.Green;
+            lab_TotalDriversScan.Text = _auditResult.Drivers.TotalDrivers.ToString();
+            lab_driverNotUpdated.Text = _auditResult.Drivers.OutdatedDrivers.ToString();
+            lab_driverNotUpdated.ForeColor = _auditResult.Drivers.OutdatedDrivers > 0 ? Color.Red : Color.Green;
 
             // Windows Update 
             List<string> updateLog = new List<string>();
@@ -364,6 +370,11 @@ namespace WindowsHealth_ServerCheck.Forms
             {
                 _auditResult.Date = DateTime.Now;
                 bool includeUpdates = AskIncludeUpdates(_auditResult);
+                var otherData = new OtherData();
+                var dfData = _auditResult.DfServer ?? new DfServerData();
+                TelemetryServices.FetchData(dfData, otherData);
+                await TelemetryServices.FetchJavaVersion(otherData, _http);
+                _auditResult.Telemetry = otherData;
                 ReportBuilder.Generate(_auditResult, includeUpdates);
             }
             // Rehabilitar controles 
@@ -584,10 +595,10 @@ namespace WindowsHealth_ServerCheck.Forms
         // Solo se pregunta si el módulo fue ejecutado; si no, devuelve false directamente.
         private bool AskIncludeUpdates(AuditResult audit)
         {
-            if (!audit.UpdatesExecuted || audit.Updates == null)
+            if (!_auditResult.UpdatesExecuted || _auditResult.Updates == null)
                 return false;
 
-            string mode = audit.Updates.IsQueryOnly
+            string mode = _auditResult.Updates.IsQueryOnly
                 ? "Solo Consulta (sin instalación)"
                 : "Instalacion";
 

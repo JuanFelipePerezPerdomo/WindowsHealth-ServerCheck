@@ -181,7 +181,7 @@
             btn_GenerateAudit.TabIndex = 4;
             btn_GenerateAudit.Text = "Generar Informe";
             btn_GenerateAudit.UseVisualStyleBackColor = false;
-            btn_GenerateAudit.Click += btn_GenerateAudit_Click;
+            btn_GenerateAudit.Click += btn_GenerateAudit_ClickAsync;
             // 
             // label1
             // 

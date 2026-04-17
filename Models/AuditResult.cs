@@ -11,6 +11,7 @@
         public UpdateResult Updates { get; set; }
         public DriversResult Drivers { get; set; }
         public DfServerData DfServer { get; set; }
+        public OtherData Telemetry { get; set; }
         public bool CleanupExecuted { get; set; }
         public bool SmartExecuted { get; set; }
         public bool UpdatesExecuted { get; set; }
